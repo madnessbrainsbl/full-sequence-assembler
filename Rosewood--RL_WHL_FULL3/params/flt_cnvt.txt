@@ -1,0 +1,107 @@
+$Revision: #1 $
+4031 4500 01 03 ?? 10   /* ***** 01/03XX10 Write Fault Servo ***** */
+4031 4501 01 03 ?? ??   /* ***** 01/03XX Rec Write Fault ***** */
+4031 4503 03 03 ?? 10   /* ***** 03/03XX10 Unrec Wt Flt Servo ***** */
+4031 4502 03 03 ?? ??   /* ***** 03/03XX Unrec Write Fault ***** */
+4031 4504 04 03 ?? ??   /* ***** 04/03XX HW Write fault ***** */
+4031 4505 01 09 ?? ??   /* ***** 01/09XX Rec Trk Following Err ***** */
+4031 4506 04 09 ?? ??   /* ***** 04/09XX Unrec Trk Fol'wing Err ***** */
+4031 4507 01 15 ?? ??   /* ***** 01/15XX Rec Seek Error ***** */
+4031 4508 03 15 ?? ??   /* ***** 03/15XX Unrec Seek Error ***** */
+4031 4509 04 15 ?? ??   /* ***** 04/15XX HW Seek Error ***** */
+4031 4510 04 02 ?? ??   /* ***** 04/02XX No Seek Complete ***** */
+4031 4511 ?? 1C ?? ??   /* ***** XX/1CXX ETF Log Recovery Err ***** */
+4031 4512 04 19 ?? ??   /* ***** 04/19XX Defect List Error ***** */
+4031 4513 ?? 31 91 0B   /* ***** XX/31910B Inval WWN in ETF Log ***** */
+4031 4514 03 31 ?? ??   /* ***** 03/31XX Format Corrupt ***** */
+4031 4515 ?? 3f 91 ??   /* ***** XX/3F91 WWN Mismatch ***** */
+4031 4516 ?? 32 ?? ??   /* ***** XX/32XX No Spares Available ***** */
+4031 4517 02 04 00 ??   /* ***** 02/0400 Drive Not Ready ***** */
+4031 4518 02 04 01 ??   /* ***** 02/0401 Drv N-Rdy Becoming Rdy ***** */
+4031 4519 02 04 02 ??   /* ***** 02/0402 Drv N-Rdy Init Cmd Req ***** */
+4031 4520 01 40 01 ??   /* ***** 01/4001 Spin-up Retries No Jog ***** */
+4031 4521 01 40 02 ??   /* ***** 01/4002 Spin-up Retries: Jog ***** */
+4031 4522 05 24 ?? ??   /* ***** 05/24XX Invalid Field in CDB ***** */
+4031 4523 04 42 ?? ??   /* ***** 04/42XX Pwr-on Selftest Fail ***** */
+4031 4524 04 44 ?? ??   /* ***** 04/44XX Int Target Failure ***** */
+4031 4525 04 80 80 ??   /* ***** 04/8080 FIFO Error on Read ***** */
+4031 4526 04 80 81 ??   /* ***** 04/8081 FIFO Error on Write ***** */
+4031 4527 09 80 ?? ??   /* ***** 09/80XX Firmware Error ***** */
+4031 4528 0B 08 00 ??   /* ***** 0B/0800 Log. Unit Comm Fail ***** */
+4031 4529 0B 08 01 ??   /* ***** 0B/0801 Log. Unit Comm T-O ***** */
+4031 4530 0B 08 02 ??   /* ***** 0B/0802 L-Unit Comm Parity Err ***** */
+4031 4531 0B 47 ?? ??   /* ***** 0B/47XX SCSI Parity Error ***** */
+4031 4532 01 16 ?? ??   /* ***** 01/16XX Data Sync Error ***** */
+4031 4533 03 16 ?? ??   /* ***** 03/16XX Unrec Data Sync Err ***** */
+4031 4534 01 17 02 ??   /* ***** 01/1702 Rec Rd Err w/+Offsets ***** */
+4031 4535 01 17 03 ??   /* ***** 01/1703 Rec Rd Err w/-Offsets ***** */
+4031 4536 01 17 ?? ??   /* ***** 01/17XX Rec Rd Error ***** */
+4031 4537 01 18 ?? ??   /* ***** 01/18XX Rec Rd Error w/ECC ***** */
+4031 4538 03 11 ?? ??   /* ***** 03/11XX Unrec Read Error ***** */
+4031 4539 01 11 ?? ??   /* ***** 01/03XX Rec Unrec Read Error ***** */
+4031 4540 04 01 00 ??   /* ***** 04/0100 No Index/Sector Signal ***** */
+4031 4541 06 5B 00 ??   /* ***** 06/5b00 Logging Thrshld Exceeded ***** */
+4031 4542 ?? 1D 00 ??   /* ***** XX/1D00 Data Miscompare-Verify ***** */
+4031 4543 05 21 ?? ??   /* ***** 05/21XX LBA Out of Range ***** */
+4031 4544 04 40 ?? ??   /* ***** 04/40XX DRAM parity Error ***** */
+4031 4545 01 5D ?? ??   /* ***** 01/5DXX Failure Prediction Threshold exceeded ***** */
+4031 4546 05 20 ?? ??   /* ***** 05/20XX Invalid Command ***** */
+4031 4547 05 26 99 02   /* ***** Invalid Field - Firmware Tag ***** */
+10124 10001 01 03 ?? 10   /* Svo Flt-01/03XX10 Write Fault Servo */
+10124 10002 01 03 ?? ??   /* Wt Flt-01/03XX Rec */
+10124 10004 03 03 ?? 10   /* Wt Flt-03/03XX Unrec */
+10124 10003 03 03 ?? ??   /* Svo Flt-03/03XX10 Unrec Wt Flt Servo */
+10124 10005 04 03 ?? ??   /* Wt Flt-04/03XX HW */
+10124 10006 01 09 ?? ??   /* Svo PES-01/09XX Rec Trk Following Err */
+10124 10007 04 09 ?? ??   /* Svo PES-04/09XX Unrec Trk Fol'wing Err */
+10124 10008 01 15 ?? ??   /* Svo Seek-01/15XX Rec Seek Error */
+10124 10009 03 15 ?? ??   /* Svo Seek-03/15XX Unrec Seek Error */
+10124 10010 04 15 ?? ??   /* Svo Seek-04/15XX HW Seek Error */
+10124 10011 04 02 ?? ??   /* Svo Seek-04/02XX No Seek Complete */
+10124 10012 ?? 1C ?? ??   /* Drv CPF-XX/1CXX Log Recovery Err */
+10124 10013 04 19 ?? ??   /* Drv H/W Err-04/19XX Defect List Error */
+10124 10014 ?? 31 91 0B   /* Proc M.E.-XX/31910B Inval WWN in ETF Log */
+10124 10015 03 31 ?? ??   /* Proc M.E.-03/31XX Format Corrupt */
+10124 10016 ?? 3f 91 ??   /* Proc Operator-XX/3F91 WWN Mismatch */
+10124 10017 ?? 32 ?? ??   /* Wt Fmt-XX/32XX No Spares Available */
+10124 10018 02 04 00 ??   /* Svo Startup-02/0400 Drive Not Ready */
+10124 10019 02 04 01 ??   /* Svo Startup-02/0401 Not Rdy Becoming Rdy */
+10124 10020 02 04 02 ??   /* Svo Startup-02/0402 Not Rdy Init Cmd Req */
+10124 10020 02 04 03 ??   /* if you see this error take it out of flt_cnvt.txt*/
+10124 10021 01 40 01 ??   /* Svo Startup-01/4001 Spin-up Retry No Jog */
+10124 10022 01 40 02 ??   /* Drv Startup-01/4002 Spin-up Retries: Jog */
+10124 10023 05 24 ?? ??   /* Proc M.E.-05/24XX Invalid Field in CDB */
+10124 10024 04 42 ?? ??   /* Drv PCBA-04/42XX Pwr-on Selftest Fail */
+10124 10025 04 44 ?? ??   /* Drv PCBA-04/44XX Int Target Failure */
+10124 10026 04 80 80 ??   /* Rd H/W Err-04/8080 FIFO Error on Read */
+10124 10027 04 80 81 ??   /* Wt H/W Err-04/8081 FIFO Error on Write */
+10124 10028 09 80 ?? ??   /* Drv F/W-09/80XX Firmware Error */
+10124 10029 0B 08 00 ??   /* Drv Iface-0B/0800 Log. Unit Comm Fail */
+10124 10030 0B 08 01 ??   /* Drv Timeout-0B/0801 Log. Unit Comm T-O */
+10124 10031 0B 08 02 ??   /* Drv Iface-0B/0802 L-Unit Comm Parity Err */
+10124 10032 0B 47 ?? ??   /* Drv Iface-0B/47XX SCSI Parity Error */
+10124 10033 01 16 ?? ??   /* Rd Rec Err-01/16XX Data Sync Error */
+10124 10034 03 16 ?? ??   /* Rd Unrec Err-03/16XX Unrec Data Sync Err */
+10124 10035 01 17 02 ??   /* Rd Rec Err-01/1702 Rec Rd Err w/+Offsets */
+10124 10036 01 17 03 ??   /* Rd Rec Err-01/1703 Rec Rd Err w/-Offsets */
+10124 10037 01 17 ?? ??   /* Rd Rec Err-01/17XX Rec Rd Error */
+10124 10038 01 18 ?? ??   /* Rd Rec Err-01/18XX Rec Rd Error w/ECC */
+10124 10039 03 11 ?? ??   /* Rd Unrec Err-03/11XX Unrec Read Error */
+10124 10040 01 11 ?? ??   /* Wt Flt-01/03XX Rec */
+10124 10041 04 01 00 ??   /* Drv H/W Err-04/0100 No Index/Sec Signal */
+10124 10042 06 5B 00 ??   /* Drv SMART-06/5B00 Log Thrshld Exceeded */
+10124 10043 ?? 1D 00 ??   /* Drv Iface-XX/1D00 Data Miscompare-Verify */
+10124 10044 05 21 ?? ??   /* Proc M.E.-05/21XX LBA Out of Range */
+10124 10045 04 40 ?? ??   /* Drv PCBA-04/40XX DRAM parity Error */
+10124 10046 01 5D ?? ??   /* Drv SMART-01/5D Fail Pred Threshold Exc */
+10124 10047 05 20 ?? ??   /* Proc M.E.-05/20XX Invalid Command */
+10124 10048 05 26 99 02   /* Proc TSD-05/2699 Invalid Field - F/W Tag */
+10124 10700 07 27 00 02   /* Wt Protect Drv Not Ready-07/27/00/02 */
+10124 11097 01 0B 01 ??   /* Drv F/W-01/0B01 Specified Temp Exceeded */
+10124 11098 04 80 86 ??   /* Rd H/W Err-04/80/86/xx IOEDC Err on Read */
+10124 11099 04 80 87 BE   /* Wt H/W Err-04/80/87/xx IOEDC Err on Wt */
+10124 11100 06 29 01 01   /* Drv Startup-06/29/01/01 Pwr On Reset */  
+10124 11130 01 0c 01 00   /* Wt Err Rate-01/0C/01/00 Wt Rec w/Auto-Re */
+10124 11131 03 14 01 ??   /* Rd Unrec Err-03/1401 Record Not Found */
+10124 11132 06 5D ?? ??   /* Drv SMART-06/5D Fail Pred Threshold Exc */ 
+9999 9999 00 00 00 00   /* ***** dummy entry - do not remove ***** */

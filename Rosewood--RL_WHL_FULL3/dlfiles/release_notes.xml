@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type='text/xsl' href='/xslt/cpcNotesPub.xsl'?>
+<!--
+	This file contains CPC release notes
+
+	DO NOT USE THE FOLLOWING CHARACTERS!!!
+		- Ampersand
+		- Less than
+		- Greater than
+-->
+<release_note>
+	<version>CPCApp v2.232</version>
+	<date>2010-06-07</date>
+	<section>
+		<change>**  This version will only support SATA Interface testing.
+     PATA Interface mode has been disabled due to code space issue.**</change>
+ 	</section>
+	<section>
+		<author>Yi Ge</author>
+		<gid>329135</gid>
+		<change>Revert AAU retry change.</change>
+      <change>Add in transfer time report to ReadDMAExtTransRate and WriteDMAExtTransRate.</change>
+                 <change>Add in Flush command type to CommandOverhead, for media cache testing.</change>
+                 <change>Fix double seek error in CommandOverhead routine.</change>
+	</section>
+	<section>
+		<author>Brandon</author>
+		<gid>324866</gid>
+		<change>Test 598 - Brought in the Ability to set Min and Max data rate specs on up to 3 specific zones, and to set a zone to zone data rate delta spec..</change>
+		<change>Test 621 - Made change to fix issue when trying to test the center of the last zone, as that location may be spares. will now determine number of used serpents in final zone, and test the center of that.</change>
+		<change>Test 515 - Fixed bug when trying to reassign more than 4064 LBAs .</change>
+                <change>Added Ability to pass in the MasterPWRevCode value used during SED drive personalization during test 575 function SSC Setup.</change>
+	</section>
+	<section>
+		<author>Curt Rogers</author>
+		<gid>8384</gid>
+		<change>T598 TestDesc = updated DEVIATION_LIMIT and REV_TIME.</change>
+	</section>
+	<section>
+		<author>Abdul Rasid Baharom</author>
+		<gid>157505</gid>
+		<change>Add ReadVerifySector in Test510 bit 6 in CTRL WORD1.This is stated in PANASONIC Unique Customer Spec requirement.</change>
+	</section>
+
+
+</release_note>

@@ -1,0 +1,159 @@
+<html>
+<title>Diagnostics Command Manual - &sect;eagate Confidential</title>
+<head>
+<!-- ID: SeAgAtE[inspired by roye]|lco-fde|3.13|@Mon Apr 14 10:22:47 2008 -->
+<style>
+BODY {background-color: white}
+TD {font-size: 10pt; font-family: verdana,helvetica; text-decoration: none; white-space:nowrap;}
+A {text-decoration: none; color: black}
+A.sub {text-decoration: none; color: darkblue}
+A:hover {color: darkred;}
+.specialClass {font-family:garamond; font-size:12pt;color:green;font-weight:bold;text-decoration:underline}
+.slink {font-family: verdana,helvetica; font-size:7pt; text-decoration:none; color:black}
+</style>
+<script src="web_icons/ua.js"></script>
+<script src="web_icons/ftiens4.js"></script>
+<script language="JavaScript">
+var NS4 = (document.layers);
+var IE4 = (document.all);
+var win = window.parent.basefrm;
+var n = 0;
+function FindInPage(str)
+{
+   var txt, i, found;
+
+   if (str == "")
+      return false;
+
+   if (NS4)
+   {
+      if (!win.find(str))
+         while(win.find(str, false, true)) n++;
+      else
+         n++;
+
+      if (n == 0)
+         alert("Not found.");
+   }
+
+   if (IE4)
+   {
+      txt = win.document.body.createTextRange();
+      
+      for (i = 0; i <= n && (found = txt.findText(str)) != false; i++)
+      {
+         txt.moveStart("character", 1);
+         txt.moveEnd("textedit");
+      }
+      
+      if (found)
+      {
+         txt.moveStart("character", -1);
+         txt.findText(str);
+         txt.select();
+         txt.scrollIntoView();
+         n++;
+      }
+      else
+      {
+         if (n > 0)
+         {
+            n = 0;
+            FindInPage(str);
+         }
+         else
+            alert("Not found.");
+      }
+   }
+   return false;
+}
+</script>
+<script>
+USETEXTLINKS = 1
+STARTALLOPEN = 0
+ICONPATH = "web_icons/"
+foldersTree = gFld("<b><i>F3 Diagnostic Functions Manual</i></b>", "DiagFunctions_RightFrame.html")
+aux1 = insFld(foldersTree, gFld("Diagnostic Functions Links", "DiagFunctions_RightFrame.html#Diagnostic Functions Links"))
+insDoc(aux1, gLnk("R", "Control Functions", "DiagFunctions_RightFrame.html#Control Functions"))
+insDoc(aux1, gLnk("R", "Online Functions", "DiagFunctions_RightFrame.html#Online Functions"))
+insDoc(aux1, gLnk("R", "Diagnostic Functions", "DiagFunctions_RightFrame.html#Diagnostic Functions"))
+aux1 = insFld(foldersTree, gFld("Diagnostic Functions Specifications", "DiagFunctions_RightFrame.html#Diagnostic Functions Specifications"))
+insDoc(aux1, gLnk("R", "Abort Diagnostic Activity", "DiagFunctions_RightFrame.html#Abort Diagnostic Activity"))
+insDoc(aux1, gLnk("R", "Buffer DLL Tune", "DiagFunctions_RightFrame.html#Buffer DLL Tune"))
+insDoc(aux1, gLnk("R", "Collect PES", "DiagFunctions_RightFrame.html#Collect PES"))
+insDoc(aux1, gLnk("R", "Disable Diagnostic Mode Requests", "DiagFunctions_RightFrame.html#Disable Diagnostic Mode Requests"))
+insDoc(aux1, gLnk("R", "Disable Online Mode Requests", "DiagFunctions_RightFrame.html#Disable Online Mode Requests"))
+insDoc(aux1, gLnk("R", "Enable Diagnostic Mode Requests", "DiagFunctions_RightFrame.html#Enable Diagnostic Mode Requests"))
+insDoc(aux1, gLnk("R", "Enable/Disable Servo Updates", "DiagFunctions_RightFrame.html#Enable/Disable Servo Updates"))
+insDoc(aux1, gLnk("R", "Enable Online Mode Requests", "DiagFunctions_RightFrame.html#Enable Online Mode Requests"))
+insDoc(aux1, gLnk("R", "Format Partition", "DiagFunctions_RightFrame.html#Format Partition"))
+insDoc(aux1, gLnk("R", "Generic Servo Command", "DiagFunctions_RightFrame.html#Generic Servo Command"))
+insDoc(aux1, gLnk("R", "Get Active Status", "DiagFunctions_RightFrame.html#Get Active Status"))
+insDoc(aux1, gLnk("R", "Get Basic Drive Information", "DiagFunctions_RightFrame.html#Get Basic Drive Information"))
+insDoc(aux1, gLnk("R", "Get Firmware Revision", "DiagFunctions_RightFrame.html#Get Firmware Revision"))
+insDoc(aux1, gLnk("R", "Get G-List", "DiagFunctions_RightFrame.html#Get G-List"))
+insDoc(aux1, gLnk("R", "Get Device Temperature", "DiagFunctions_RightFrame.html#Get Device Temperature"))
+insDoc(aux1, gLnk("R", "Get Target Track And Sector Information", "DiagFunctions_RightFrame.html#Get Target Track And Sector Information"))
+insDoc(aux1, gLnk("R", "Get Target Track Information", "DiagFunctions_RightFrame.html#Get Target Track Information"))
+insDoc(aux1, gLnk("R", "Head Smash Test", "DiagFunctions_RightFrame.html#Head Smash Test"))
+insDoc(aux1, gLnk("R", "Initialize Defect Lists", "DiagFunctions_RightFrame.html#Initialize Defect Lists"))
+insDoc(aux1, gLnk("R", "Load/Unload Heads", "DiagFunctions_RightFrame.html#Load/Unload Heads"))
+insDoc(aux1, gLnk("R", "Measure Disc Eccentricity", "DiagFunctions_RightFrame.html#Measure Disc Eccentricity"))
+insDoc(aux1, gLnk("R", "Modify Track Defect List", "DiagFunctions_RightFrame.html#Modify Track Defect List"))
+insDoc(aux1, gLnk("R", "Particle Sweep", "DiagFunctions_RightFrame.html#Particle Sweep"))
+insDoc(aux1, gLnk("R", "Read Power ASIC Register", "DiagFunctions_RightFrame.html#Read Power ASIC Register"))
+insDoc(aux1, gLnk("R", "Read/Modify SAP", "DiagFunctions_RightFrame.html#Read/Modify SAP"))
+insDoc(aux1, gLnk("R", "Read Servo RAM At Index", "DiagFunctions_RightFrame.html#Read Servo RAM At Index"))
+insDoc(aux1, gLnk("R", "Reset Drive", "DiagFunctions_RightFrame.html#Reset Drive"))
+insDoc(aux1, gLnk("R", "Read/Write Memory", "DiagFunctions_RightFrame.html#Read/Write Memory"))
+insDoc(aux1, gLnk("R", "Set Selected DERP Retry State", "DiagFunctions_RightFrame.html#Set Selected DERP Retry State"))
+insDoc(aux1, gLnk("R", "Set Target Address", "DiagFunctions_RightFrame.html#Set Target Address"))
+insDoc(aux1, gLnk("R", "Set Test Space", "DiagFunctions_RightFrame.html#Set Test Space"))
+insDoc(aux1, gLnk("R", "Spin Down Drive", "DiagFunctions_RightFrame.html#Spin Down Drive"))
+insDoc(aux1, gLnk("R", "Spin Up Drive", "DiagFunctions_RightFrame.html#Spin Up Drive"))
+insDoc(aux1, gLnk("R", "Translate Address", "DiagFunctions_RightFrame.html#Translate Address"))
+insDoc(aux1, gLnk("R", "Write Servo RAM At Index", "DiagFunctions_RightFrame.html#Write Servo RAM At Index"))
+insDoc(aux1, gLnk("R", "Write Power ASIC Register", "DiagFunctions_RightFrame.html#Write Power ASIC Register"))
+aux1 = insFld(foldersTree, gFld("Error Codes And Other Information", "DiagFunctions_RightFrame.html#Error Codes And Other Information"))
+insDoc(aux1, gLnk("R", "DiagError - Diagnostic Error Codes", "DiagFunctions_RightFrame.html#DiagError - Diagnostic Error Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Request Type Codes", "DiagFunctions_RightFrame.html#Read/Write Request Type Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Status Codes", "DiagFunctions_RightFrame.html#Read/Write Status Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Sense Error Codes", "DiagFunctions_RightFrame.html#Read/Write Sense Error Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Retry Characters", "DiagFunctions_RightFrame.html#Read/Write Retry Characters"))
+insDoc(aux1, gLnk("R", "Defined Error Recovery Status Bit Flags", "DiagFunctions_RightFrame.html#Defined Error Recovery Status Bit Flags"))
+insDoc(aux1, gLnk("R", "Flash LED Codes", "DiagFunctions_RightFrame.html#Flash LED Codes"))
+</script>
+</head>
+<body style="margin:0" scroll="yes">
+<table border="8" height="48" width="100%" bordercolor="white">
+   <tr>
+      <td align="center" valign="center">
+         <form name="search" onSubmit="return FindInPage(this.string.value);">
+            <input name="string" type="text" onChange="n = 0;">
+            <input type="submit" value="Search">
+       </td>
+   </tr>
+   <tr>
+      <td align="center" valign="center">
+         <a href="DiagFunctions_RightFrame.html#Top" class="sub" target="basefrm"><small>page top</small></a>
+         <small>|</small>
+         <a href="javascript:window.location.reload()" class="sub"><small>reset</small></a>
+         <font color="#FFFFFF">.</font><br><small><small>print: </small>
+         <a href="#" class="sub" OnClick="alert('Please keep in mind that the left/right margins need to be reduced when printing this document (in IE this can be done in the \'Page Setup\' feature).');window.parent.frames['basefrm'].focus();window.parent.frames['basefrm'].print();"><small>document</small></a>
+         </small><font color="#FFFFFF">.</font></form>
+      </td>
+   </tr>
+</table>
+<div style="position:absolute; top:79; left:0;"><hr width="100%"></div>
+<div style="position:absolute; top:88; left:0;"><a href="http://www.seagate.com/" class="slink" target="_new"> &nbsp;&nbsp;&sect;eagate Technology - <i>We turn on ideas.</i></a></font></div>
+<div style="position:absolute; top:95; left:0;"><hr width="100%"></div>
+<table border="3" width="100%" bordercolor="white">
+   <tr>
+      <td>
+         <script>initializeDocument()</script>
+         <noscript>Please enable JavaScript in your browser.</noscript>
+      </td>
+   </tr>
+</table>
+</body>
+</html>

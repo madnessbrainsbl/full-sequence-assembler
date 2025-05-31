@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<GradingCriteria xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<GradingRev>Rev00B</GradingRev>
+	<row>
+		<Criteria_Table>P_FASTSOC</Criteria_Table>
+		<Criteria_Column>SOC_TYPE</Criteria_Column>
+		<Criteria_Op>EQUAL TO</Criteria_Op>
+		<Criteria_Value>0</Criteria_Value>
+		<Num_Violations>0</Num_Violations>
+		<Business_Group>CTUA</Business_Group>
+		<Grade_Position>16</Grade_Position>
+		<Grade_Level>1</Grade_Level>
+	</row>
+	<row>
+		<Criteria_Table>P_FASTSOC</Criteria_Table>
+		<Criteria_Column>SOC_TYPE</Criteria_Column>
+		<Criteria_Op>EQUAL TO</Criteria_Op>
+		<Criteria_Value>0</Criteria_Value>
+		<Num_Violations>0</Num_Violations>
+		<Business_Group>OEM1B</Business_Group>
+		<Grade_Position>16</Grade_Position>
+		<Grade_Level>1</Grade_Level>
+	</row>
+	<row>
+		<Criteria_Table>P_FASTSOC</Criteria_Table>
+		<Criteria_Column>SOC_TYPE</Criteria_Column>
+		<Criteria_Op>EQUAL TO</Criteria_Op>
+		<Criteria_Value>0</Criteria_Value>
+		<Num_Violations>0</Num_Violations>
+		<Business_Group>STD</Business_Group>
+		<Grade_Position>16</Grade_Position>
+		<Grade_Level>1</Grade_Level>
+	</row>
+	<row>
+		<Criteria_Table>P_FASTSOC</Criteria_Table>
+		<Criteria_Column>SOC_TYPE</Criteria_Column>
+		<Criteria_Op>GREATER THAN OR EQUAL TO</Criteria_Op>
+		<Criteria_Value>0</Criteria_Value>
+		<Num_Violations>0</Num_Violations>
+		<Business_Group>SBS</Business_Group>
+		<Grade_Position>16</Grade_Position>
+		<Grade_Level>0</Grade_Level>
+	</row>
+</GradingCriteria>

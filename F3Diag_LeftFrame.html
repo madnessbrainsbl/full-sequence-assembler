@@ -1,0 +1,329 @@
+<html>
+<title>Diagnostics Command Manual - &sect;eagate Confidential</title>
+<head>
+<!-- ID: SeAgAtE[inspired by roye]|lco-fde|3.13|@Mon Apr 14 10:22:40 2008 -->
+<style>
+BODY {background-color: white}
+TD {font-size: 10pt; font-family: verdana,helvetica; text-decoration: none; white-space:nowrap;}
+A {text-decoration: none; color: black}
+A.sub {text-decoration: none; color: darkblue}
+A:hover {color: darkred;}
+.specialClass {font-family:garamond; font-size:12pt;color:green;font-weight:bold;text-decoration:underline}
+.slink {font-family: verdana,helvetica; font-size:7pt; text-decoration:none; color:black}
+</style>
+<script src="web_icons/ua.js"></script>
+<script src="web_icons/ftiens4.js"></script>
+<script language="JavaScript">
+var NS4 = (document.layers);
+var IE4 = (document.all);
+var win = window.parent.basefrm;
+var n = 0;
+function FindInPage(str)
+{
+   var txt, i, found;
+
+   if (str == "")
+      return false;
+
+   if (NS4)
+   {
+      if (!win.find(str))
+         while(win.find(str, false, true)) n++;
+      else
+         n++;
+
+      if (n == 0)
+         alert("Not found.");
+   }
+
+   if (IE4)
+   {
+      txt = win.document.body.createTextRange();
+      
+      for (i = 0; i <= n && (found = txt.findText(str)) != false; i++)
+      {
+         txt.moveStart("character", 1);
+         txt.moveEnd("textedit");
+      }
+      
+      if (found)
+      {
+         txt.moveStart("character", -1);
+         txt.findText(str);
+         txt.select();
+         txt.scrollIntoView();
+         n++;
+      }
+      else
+      {
+         if (n > 0)
+         {
+            n = 0;
+            FindInPage(str);
+         }
+         else
+            alert("Not found.");
+      }
+   }
+   return false;
+}
+</script>
+<script>
+USETEXTLINKS = 1
+STARTALLOPEN = 0
+ICONPATH = "web_icons/"
+foldersTree = gFld("<b><i>Diagnostic Commands</i></b>", "F3Diag_RightFrame.html")
+aux1 = insFld(foldersTree, gFld("Serial Port Diagnostic Modes", "F3Diag_RightFrame.html#Serial Port Diagnostic Modes"))
+insDoc(aux1, gLnk("R", "ESLIP Mode", "F3Diag_RightFrame.html#ESLIP Mode"))
+insDoc(aux1, gLnk("R", "ASCII Online Mode", "F3Diag_RightFrame.html#ASCII Online Mode"))
+insDoc(aux1, gLnk("R", "ASCII Diagnostic Mode", "F3Diag_RightFrame.html#ASCII Diagnostic Mode"))
+aux1 = insFld(foldersTree, gFld("Serial Port Diagnostic Command Levels", "F3Diag_RightFrame.html#Serial Port Diagnostic Command Levels"))
+insDoc(aux1, gLnk("R", "All Level Commands", "F3Diag_RightFrame.html#All Level Commands"))
+insDoc(aux1, gLnk("R", "Level 1 Commands", "F3Diag_RightFrame.html#Level 1 Commands"))
+insDoc(aux1, gLnk("R", "Level 2 Commands", "F3Diag_RightFrame.html#Level 2 Commands"))
+insDoc(aux1, gLnk("R", "Level 3 Commands", "F3Diag_RightFrame.html#Level 3 Commands"))
+insDoc(aux1, gLnk("R", "Level 4 Commands", "F3Diag_RightFrame.html#Level 4 Commands"))
+insDoc(aux1, gLnk("R", "Level 5 Commands", "F3Diag_RightFrame.html#Level 5 Commands"))
+insDoc(aux1, gLnk("R", "Level 6 Commands", "F3Diag_RightFrame.html#Level 6 Commands"))
+insDoc(aux1, gLnk("R", "Level 7 Commands", "F3Diag_RightFrame.html#Level 7 Commands"))
+insDoc(aux1, gLnk("R", "Level 8 Commands", "F3Diag_RightFrame.html#Level 8 Commands"))
+insDoc(aux1, gLnk("R", "Level A Commands", "F3Diag_RightFrame.html#Level A Commands"))
+insDoc(aux1, gLnk("R", "Level C Commands", "F3Diag_RightFrame.html#Level C Commands"))
+insDoc(aux1, gLnk("R", "Level E Commands", "F3Diag_RightFrame.html#Level E Commands"))
+insDoc(aux1, gLnk("R", "Level F Commands", "F3Diag_RightFrame.html#Level F Commands"))
+insDoc(aux1, gLnk("R", "Level G Commands", "F3Diag_RightFrame.html#Level G Commands"))
+insDoc(aux1, gLnk("R", "Level H Commands", "F3Diag_RightFrame.html#Level H Commands"))
+insDoc(aux1, gLnk("R", "Level L Commands", "F3Diag_RightFrame.html#Level L Commands"))
+insDoc(aux1, gLnk("R", "Level T Commands", "F3Diag_RightFrame.html#Level T Commands"))
+insDoc(aux1, gLnk("R", "Online Commands", "F3Diag_RightFrame.html#Online Commands"))
+aux1 = insFld(foldersTree, gFld("Serial Port Diagnostic Commands", "F3Diag_RightFrame.html#Serial Port Diagnostic Commands"))
+insDoc(aux1, gLnk("R", "Abort", "F3Diag_RightFrame.html#Abort"))
+insDoc(aux1, gLnk("R", "Abort Looping Command or Batch File", "F3Diag_RightFrame.html#Abort Looping Command or Batch File"))
+insDoc(aux1, gLnk("R", "ASCII Log Control", "F3Diag_RightFrame.html#ASCII Log Control"))
+insDoc(aux1, gLnk("R", "Batch File Label", "F3Diag_RightFrame.html#Batch File Label"))
+insDoc(aux1, gLnk("R", "Batch File Terminator", "F3Diag_RightFrame.html#Batch File Terminator"))
+insDoc(aux1, gLnk("R", "Buffer Compare", "F3Diag_RightFrame.html#Buffer Compare"))
+insDoc(aux1, gLnk("R", "Buffer Copy", "F3Diag_RightFrame.html#Buffer Copy"))
+insDoc(aux1, gLnk("R", "Buffer Display", "F3Diag_RightFrame.html#Buffer Display"))
+insDoc(aux1, gLnk("R", "Buffer DLL Tune", "F3Diag_RightFrame.html#Buffer DLL Tune"))
+insDoc(aux1, gLnk("R", "Butterfly Seek Test", "F3Diag_RightFrame.html#Butterfly Seek Test"))
+insDoc(aux1, gLnk("R", "Change Diagnostic Command Level", "F3Diag_RightFrame.html#Change Diagnostic Command Level"))
+insDoc(aux1, gLnk("R", "Channel Temperature Adjustment", "F3Diag_RightFrame.html#Channel Temperature Adjustment"))
+insDoc(aux1, gLnk("R", "Contact Detect", "F3Diag_RightFrame.html#Contact Detect"))
+insDoc(aux1, gLnk("R", "Convert Data Track Percentage To Servo Offset Count", "F3Diag_RightFrame.html#Convert Data Track Percentage To Servo Offset Count"))
+insDoc(aux1, gLnk("R", "Copy Correction Buffer", "F3Diag_RightFrame.html#Copy Correction Buffer"))
+insDoc(aux1, gLnk("R", "Copy Log File", "F3Diag_RightFrame.html#Copy Log File"))
+insDoc(aux1, gLnk("R", "Corrupt LBA", "F3Diag_RightFrame.html#Corrupt LBA"))
+insDoc(aux1, gLnk("R", "Create Log File", "F3Diag_RightFrame.html#Create Log File"))
+insDoc(aux1, gLnk("R", "Decrement Read/Write Scope Sync", "F3Diag_RightFrame.html#Decrement Read/Write Scope Sync"))
+insDoc(aux1, gLnk("R", "Delete Log File", "F3Diag_RightFrame.html#Delete Log File"))
+insDoc(aux1, gLnk("R", "Disable / Enable Servo ZAP coefficients and ZAP read", "F3Diag_RightFrame.html#Disable / Enable Servo ZAP coefficients and ZAP read"))
+insDoc(aux1, gLnk("R", "Display Active Status", "F3Diag_RightFrame.html#Display Active Status"))
+insDoc(aux1, gLnk("R", "Display ASCII Command Information", "F3Diag_RightFrame.html#Display ASCII Command Information"))
+insDoc(aux1, gLnk("R", "Display Batch File", "F3Diag_RightFrame.html#Display Batch File"))
+insDoc(aux1, gLnk("R", "Display Congen", "F3Diag_RightFrame.html#Display Congen"))
+insDoc(aux1, gLnk("R", "Display Controller Registers", "F3Diag_RightFrame.html#Display Controller Registers"))
+insDoc(aux1, gLnk("R", "Display Correction Buffer", "F3Diag_RightFrame.html#Display Correction Buffer"))
+insDoc(aux1, gLnk("R", "Display Current Read Channel Settings", "F3Diag_RightFrame.html#Display Current Read Channel Settings"))
+insDoc(aux1, gLnk("R", "Display Defect Lists", "F3Diag_RightFrame.html#Display Defect Lists"))
+insDoc(aux1, gLnk("R", "Display Defects On Current Track", "F3Diag_RightFrame.html#Display Defects On Current Track"))
+insDoc(aux1, gLnk("R", "Display Diagnostic Buffer Information", "F3Diag_RightFrame.html#Display Diagnostic Buffer Information"))
+insDoc(aux1, gLnk("R", "Display DST Status", "F3Diag_RightFrame.html#Display DST Status"))
+insDoc(aux1, gLnk("R", "Display / Edit Log", "F3Diag_RightFrame.html#Display / Edit Log"))
+insDoc(aux1, gLnk("R", "Display Firmware Revision", "F3Diag_RightFrame.html#Display Firmware Revision"))
+insDoc(aux1, gLnk("R", "Display Log File", "F3Diag_RightFrame.html#Display Log File"))
+insDoc(aux1, gLnk("R", "Display Log File Information", "F3Diag_RightFrame.html#Display Log File Information"))
+insDoc(aux1, gLnk("R", "Display Micro Jog for Logical Cylinder and Head", "F3Diag_RightFrame.html#Display Micro Jog for Logical Cylinder and Head"))
+insDoc(aux1, gLnk("R", "Display / Modify Adaptive Parameter", "F3Diag_RightFrame.html#Display / Modify Adaptive Parameter"))
+insDoc(aux1, gLnk("R", "Display / Modify CAP", "F3Diag_RightFrame.html#Display / Modify CAP"))
+insDoc(aux1, gLnk("R", "Display / Modify RAP revision 02", "F3Diag_RightFrame.html#Display / Modify RAP revision 02"))
+insDoc(aux1, gLnk("R", "Display / Modify RAP revision 10", "F3Diag_RightFrame.html#Display / Modify RAP revision 10"))
+insDoc(aux1, gLnk("R", "Display / Modify RAP revision 11", "F3Diag_RightFrame.html#Display / Modify RAP revision 11"))
+insDoc(aux1, gLnk("R", "Display / Modify RAP revision 14", "F3Diag_RightFrame.html#Display / Modify RAP revision 14"))
+insDoc(aux1, gLnk("R", "Display / Modify RW Working Parameters", "F3Diag_RightFrame.html#Display / Modify RW Working Parameters"))
+insDoc(aux1, gLnk("R", "Display / Modify SAP", "F3Diag_RightFrame.html#Display / Modify SAP"))
+insDoc(aux1, gLnk("R", "Display / Modify ZAP Table", "F3Diag_RightFrame.html#Display / Modify ZAP Table"))
+insDoc(aux1, gLnk("R", "Display Native Interface and Read/Write Command History", "F3Diag_RightFrame.html#Display Native Interface and Read/Write Command History"))
+insDoc(aux1, gLnk("R", "Display Native Interface Command State", "F3Diag_RightFrame.html#Display Native Interface Command State"))
+insDoc(aux1, gLnk("R", "Display Native Interface Configuration", "F3Diag_RightFrame.html#Display Native Interface Configuration"))
+insDoc(aux1, gLnk("R", "Display Native Interface Read Cache Information", "F3Diag_RightFrame.html#Display Native Interface Read Cache Information"))
+insDoc(aux1, gLnk("R", "Display Preamp Head Resistance", "F3Diag_RightFrame.html#Display Preamp Head Resistance"))
+insDoc(aux1, gLnk("R", "Display Read/Write Statistics", "F3Diag_RightFrame.html#Display Read/Write Statistics"))
+insDoc(aux1, gLnk("R", "Display Read/Write Statistics By Zone", "F3Diag_RightFrame.html#Display Read/Write Statistics By Zone"))
+insDoc(aux1, gLnk("R", "Display Sign On Message", "F3Diag_RightFrame.html#Display Sign On Message"))
+insDoc(aux1, gLnk("R", "Display Super Parity RAM", "F3Diag_RightFrame.html#Display Super Parity RAM"))
+insDoc(aux1, gLnk("R", "Display Temperature", "F3Diag_RightFrame.html#Display Temperature"))
+insDoc(aux1, gLnk("R", "Display Track Information", "F3Diag_RightFrame.html#Display Track Information"))
+insDoc(aux1, gLnk("R", "Display Zone Information", "F3Diag_RightFrame.html#Display Zone Information"))
+insDoc(aux1, gLnk("R", "Display Directed Offline Scan Information", "F3Diag_RightFrame.html#Display Directed Offline Scan Information"))
+insDoc(aux1, gLnk("R", "Download Generic File", "F3Diag_RightFrame.html#Download Generic File"))
+insDoc(aux1, gLnk("R", "Drive Free Fall Protection", "F3Diag_RightFrame.html#Drive Free Fall Protection"))
+insDoc(aux1, gLnk("R", "Edit Buffer Memory Byte", "F3Diag_RightFrame.html#Edit Buffer Memory Byte"))
+insDoc(aux1, gLnk("R", "Edit Processor Memory Byte", "F3Diag_RightFrame.html#Edit Processor Memory Byte"))
+insDoc(aux1, gLnk("R", "Edit Processor Memory Word", "F3Diag_RightFrame.html#Edit Processor Memory Word"))
+insDoc(aux1, gLnk("R", "Enable and Init RW Statistics", "F3Diag_RightFrame.html#Enable and Init RW Statistics"))
+insDoc(aux1, gLnk("R", "Enable/Disable Channel/Preamp Register Display", "F3Diag_RightFrame.html#Enable/Disable Channel/Preamp Register Display"))
+insDoc(aux1, gLnk("R", "Enable / Disable Logging", "F3Diag_RightFrame.html#Enable / Disable Logging"))
+insDoc(aux1, gLnk("R", "Enable / Disable PES Output", "F3Diag_RightFrame.html#Enable / Disable PES Output"))
+insDoc(aux1, gLnk("R", "Enable / Disable RVFF", "F3Diag_RightFrame.html#Enable / Disable RVFF"))
+insDoc(aux1, gLnk("R", "Enable / Disable Servo Updates", "F3Diag_RightFrame.html#Enable / Disable Servo Updates"))
+insDoc(aux1, gLnk("R", "Enable / Disable Write Fault", "F3Diag_RightFrame.html#Enable / Disable Write Fault"))
+insDoc(aux1, gLnk("R", "Enable Looping", "F3Diag_RightFrame.html#Enable Looping"))
+insDoc(aux1, gLnk("R", "Enable ESLIP Serial Port Mode", "F3Diag_RightFrame.html#Enable ESLIP Serial Port Mode"))
+insDoc(aux1, gLnk("R", "Enable ASCII Diagnostic Serial Port Mode", "F3Diag_RightFrame.html#Enable ASCII Diagnostic Serial Port Mode"))
+insDoc(aux1, gLnk("R", "Enable ASCII Online Serial Port Mode", "F3Diag_RightFrame.html#Enable ASCII Online Serial Port Mode"))
+insDoc(aux1, gLnk("R", "Enter Batch File", "F3Diag_RightFrame.html#Enter Batch File"))
+insDoc(aux1, gLnk("R", "Enter Servo Matlab Shell", "F3Diag_RightFrame.html#Enter Servo Matlab Shell"))
+insDoc(aux1, gLnk("R", "Erase Seacos Data And Code", "F3Diag_RightFrame.html#Erase Seacos Data And Code"))
+insDoc(aux1, gLnk("R", "Erase Track", "F3Diag_RightFrame.html#Erase Track"))
+insDoc(aux1, gLnk("R", "Fast MSESER Measurement", "F3Diag_RightFrame.html#Fast MSESER Measurement"))
+insDoc(aux1, gLnk("R", "Fill Correction Buffer", "F3Diag_RightFrame.html#Fill Correction Buffer"))
+insDoc(aux1, gLnk("R", "Fill Super Parity RAM", "F3Diag_RightFrame.html#Fill Super Parity RAM"))
+insDoc(aux1, gLnk("R", "Fine RW Offset Measurement", "F3Diag_RightFrame.html#Fine RW Offset Measurement"))
+insDoc(aux1, gLnk("R", "Firmware Reset", "F3Diag_RightFrame.html#Firmware Reset"))
+insDoc(aux1, gLnk("R", "Format Partition", "F3Diag_RightFrame.html#Format Partition"))
+insDoc(aux1, gLnk("R", "Generic Read/Write Request", "F3Diag_RightFrame.html#Generic Read/Write Request"))
+insDoc(aux1, gLnk("R", "Generic Servo Command", "F3Diag_RightFrame.html#Generic Servo Command"))
+insDoc(aux1, gLnk("R", "Get Thermistor Temperature", "F3Diag_RightFrame.html#Get Thermistor Temperature"))
+insDoc(aux1, gLnk("R", "Goop Plot", "F3Diag_RightFrame.html#Goop Plot"))
+insDoc(aux1, gLnk("R", "Head Smash Test", "F3Diag_RightFrame.html#Head Smash Test"))
+insDoc(aux1, gLnk("R", "Increment Read/Write Scope Sync", "F3Diag_RightFrame.html#Increment Read/Write Scope Sync"))
+insDoc(aux1, gLnk("R", "Initialize Defect List", "F3Diag_RightFrame.html#Initialize Defect List"))
+insDoc(aux1, gLnk("R", "Initialize Log File", "F3Diag_RightFrame.html#Initialize Log File"))
+insDoc(aux1, gLnk("R", "Load/Unload Heads", "F3Diag_RightFrame.html#Load/Unload Heads"))
+insDoc(aux1, gLnk("R", "Mark Media Flaw", "F3Diag_RightFrame.html#Mark Media Flaw"))
+insDoc(aux1, gLnk("R", "Measure Disc Eccentricity", "F3Diag_RightFrame.html#Measure Disc Eccentricity"))
+insDoc(aux1, gLnk("R", "Measure Latch Force", "F3Diag_RightFrame.html#Measure Latch Force"))
+insDoc(aux1, gLnk("R", "Measure Seek Access Time", "F3Diag_RightFrame.html#Measure Seek Access Time"))
+insDoc(aux1, gLnk("R", "Measure Throughput", "F3Diag_RightFrame.html#Measure Throughput"))
+insDoc(aux1, gLnk("R", "Memory Block Display", "F3Diag_RightFrame.html#Memory Block Display"))
+insDoc(aux1, gLnk("R", "Merge Alternate List into Slip List", "F3Diag_RightFrame.html#Merge Alternate List into Slip List"))
+insDoc(aux1, gLnk("R", "Modify Track Defect List", "F3Diag_RightFrame.html#Modify Track Defect List"))
+insDoc(aux1, gLnk("R", "Odd Even Encroachment Test", "F3Diag_RightFrame.html#Odd Even Encroachment Test"))
+insDoc(aux1, gLnk("R", "Off Track Capability", "F3Diag_RightFrame.html#Off Track Capability"))
+insDoc(aux1, gLnk("R", "Particle Sweep", "F3Diag_RightFrame.html#Particle Sweep"))
+insDoc(aux1, gLnk("R", "Pause Interface Task", "F3Diag_RightFrame.html#Pause Interface Task"))
+insDoc(aux1, gLnk("R", "Pause Output", "F3Diag_RightFrame.html#Pause Output"))
+insDoc(aux1, gLnk("R", "Peek Memory Byte", "F3Diag_RightFrame.html#Peek Memory Byte"))
+insDoc(aux1, gLnk("R", "Peek Memory Word", "F3Diag_RightFrame.html#Peek Memory Word"))
+insDoc(aux1, gLnk("R", "Poke Memory Byte", "F3Diag_RightFrame.html#Poke Memory Byte"))
+insDoc(aux1, gLnk("R", "Read CHS", "F3Diag_RightFrame.html#Read CHS"))
+insDoc(aux1, gLnk("R", "Read Current Servo Destination", "F3Diag_RightFrame.html#Read Current Servo Destination"))
+insDoc(aux1, gLnk("R", "Read LBA", "F3Diag_RightFrame.html#Read LBA"))
+insDoc(aux1, gLnk("R", "Read Long CHS or Read System CHS", "F3Diag_RightFrame.html#Read Long CHS or Read System CHS"))
+insDoc(aux1, gLnk("R", "Read Non-Volatile Adaptive Parameters", "F3Diag_RightFrame.html#Read Non-Volatile Adaptive Parameters"))
+insDoc(aux1, gLnk("R", "Read Peripheral Register - channel or preamp", "F3Diag_RightFrame.html#Read Peripheral Register - channel or preamp"))
+insDoc(aux1, gLnk("R", "Read Servo RAM at Address", "F3Diag_RightFrame.html#Read Servo RAM at Address"))
+insDoc(aux1, gLnk("R", "Read Servo RAM at Index", "F3Diag_RightFrame.html#Read Servo RAM at Index"))
+insDoc(aux1, gLnk("R", "Read Servo Symbol Table at Index", "F3Diag_RightFrame.html#Read Servo Symbol Table at Index"))
+insDoc(aux1, gLnk("R", "Read System CHS", "F3Diag_RightFrame.html#Read System CHS"))
+insDoc(aux1, gLnk("R", "Read / Unlock DDR Buffer", "F3Diag_RightFrame.html#Read / Unlock DDR Buffer"))
+insDoc(aux1, gLnk("R", "Read Verify CHS", "F3Diag_RightFrame.html#Read Verify CHS"))
+insDoc(aux1, gLnk("R", "Read Wedge", "F3Diag_RightFrame.html#Read Wedge"))
+insDoc(aux1, gLnk("R", "Read Zap from Disc to Table", "F3Diag_RightFrame.html#Read Zap from Disc to Table"))
+insDoc(aux1, gLnk("R", "Real Time Servo Trace", "F3Diag_RightFrame.html#Real Time Servo Trace"))
+insDoc(aux1, gLnk("R", "Resume Interface Task", "F3Diag_RightFrame.html#Resume Interface Task"))
+insDoc(aux1, gLnk("R", "Run Batch File", "F3Diag_RightFrame.html#Run Batch File"))
+insDoc(aux1, gLnk("R", "Read or Write Power ASIC Register", "F3Diag_RightFrame.html#Read or Write Power ASIC Register"))
+insDoc(aux1, gLnk("R", "SATA Debug SPI SSIP", "F3Diag_RightFrame.html#SATA Debug SPI SSIP"))
+insDoc(aux1, gLnk("R", "SATA Debug Athos MiPhy 365", "F3Diag_RightFrame.html#SATA Debug Athos MiPhy 365"))
+insDoc(aux1, gLnk("R", "SATA Debug Athos Shanghai 390", "F3Diag_RightFrame.html#SATA Debug Athos Shanghai 390"))
+insDoc(aux1, gLnk("R", "Save Adaptives To Flash", "F3Diag_RightFrame.html#Save Adaptives To Flash"))
+insDoc(aux1, gLnk("R", "Scan Track for Servo Defects and ZAP", "F3Diag_RightFrame.html#Scan Track for Servo Defects and ZAP"))
+insDoc(aux1, gLnk("R", "Seek Repeatedly Between Physical Cylinders", "F3Diag_RightFrame.html#Seek Repeatedly Between Physical Cylinders"))
+insDoc(aux1, gLnk("R", "Seek to LBA", "F3Diag_RightFrame.html#Seek to LBA"))
+insDoc(aux1, gLnk("R", "Seek to Logical Cylinder and Head", "F3Diag_RightFrame.html#Seek to Logical Cylinder and Head"))
+insDoc(aux1, gLnk("R", "Seek to Physical Cylinder and Head", "F3Diag_RightFrame.html#Seek to Physical Cylinder and Head"))
+insDoc(aux1, gLnk("R", "Select Data Output Mode", "F3Diag_RightFrame.html#Select Data Output Mode"))
+insDoc(aux1, gLnk("R", "Select Logical Head", "F3Diag_RightFrame.html#Select Logical Head"))
+insDoc(aux1, gLnk("R", "Select Servo Controller", "F3Diag_RightFrame.html#Select Servo Controller"))
+insDoc(aux1, gLnk("R", "Servo Batch Test sub commands", "F3Diag_RightFrame.html#Servo Batch Test sub commands"))
+insDoc(aux1, gLnk("R", "Servo Bode Plot", "F3Diag_RightFrame.html#Servo Bode Plot"))
+insDoc(aux1, gLnk("R", "Servo Diagnostic Sub Commands", "F3Diag_RightFrame.html#Servo Diagnostic Sub Commands"))
+insDoc(aux1, gLnk("R", "Set Baud Rate", "F3Diag_RightFrame.html#Set Baud Rate"))
+insDoc(aux1, gLnk("R", "Set Buffer Pattern", "F3Diag_RightFrame.html#Set Buffer Pattern"))
+insDoc(aux1, gLnk("R", "Set Congen Parameter", "F3Diag_RightFrame.html#Set Congen Parameter"))
+insDoc(aux1, gLnk("R", "Set Controller Test Port", "F3Diag_RightFrame.html#Set Controller Test Port"))
+insDoc(aux1, gLnk("R", "Set Retries - DERP", "F3Diag_RightFrame.html#Set Retries - DERP"))
+insDoc(aux1, gLnk("R", "Set DERP Retry State", "F3Diag_RightFrame.html#Set DERP Retry State"))
+insDoc(aux1, gLnk("R", "Set Diag Idle Mode", "F3Diag_RightFrame.html#Set Diag Idle Mode"))
+insDoc(aux1, gLnk("R", "Set Direct Write Mode", "F3Diag_RightFrame.html#Set Direct Write Mode"))
+insDoc(aux1, gLnk("R", "Set Retries - Non-DERP", "F3Diag_RightFrame.html#Set Retries - Non-DERP"))
+insDoc(aux1, gLnk("R", "Set Seek Speed", "F3Diag_RightFrame.html#Set Seek Speed"))
+insDoc(aux1, gLnk("R", "Set Test Space", "F3Diag_RightFrame.html#Set Test Space"))
+insDoc(aux1, gLnk("R", "Set Track Format", "F3Diag_RightFrame.html#Set Track Format"))
+insDoc(aux1, gLnk("R", "Set Tracking Offset", "F3Diag_RightFrame.html#Set Tracking Offset"))
+insDoc(aux1, gLnk("R", "Slow Write CHS", "F3Diag_RightFrame.html#Slow Write CHS"))
+insDoc(aux1, gLnk("R", "SMART Control", "F3Diag_RightFrame.html#SMART Control"))
+insDoc(aux1, gLnk("R", "Special Batch File Function", "F3Diag_RightFrame.html#Special Batch File Function"))
+insDoc(aux1, gLnk("R", "Spin Down and Reset Drive", "F3Diag_RightFrame.html#Spin Down and Reset Drive"))
+insDoc(aux1, gLnk("R", "Spin Down Drive", "F3Diag_RightFrame.html#Spin Down Drive"))
+insDoc(aux1, gLnk("R", "Spin Up Drive", "F3Diag_RightFrame.html#Spin Up Drive"))
+insDoc(aux1, gLnk("R", "Toggle Debug Display Enable", "F3Diag_RightFrame.html#Toggle Debug Display Enable"))
+insDoc(aux1, gLnk("R", "Toggle Diag Idle Mode", "F3Diag_RightFrame.html#Toggle Diag Idle Mode"))
+insDoc(aux1, gLnk("R", "Toggle EIB-Specific R/W Tracing", "F3Diag_RightFrame.html#Toggle EIB-Specific R/W Tracing"))
+insDoc(aux1, gLnk("R", "Toggle Interface Command Echo", "F3Diag_RightFrame.html#Toggle Interface Command Echo"))
+insDoc(aux1, gLnk("R", "Toggle R/W Tracing", "F3Diag_RightFrame.html#Toggle R/W Tracing"))
+insDoc(aux1, gLnk("R", "Translate LBA", "F3Diag_RightFrame.html#Translate LBA"))
+insDoc(aux1, gLnk("R", "Translate Logical Cylinder, Logical Head and Logical Sector", "F3Diag_RightFrame.html#Translate Logical Cylinder, Logical Head and Logical Sector"))
+insDoc(aux1, gLnk("R", "Translate Logical Sector", "F3Diag_RightFrame.html#Translate Logical Sector"))
+insDoc(aux1, gLnk("R", "Translate Nominal Cylinder and Logical Head", "F3Diag_RightFrame.html#Translate Nominal Cylinder and Logical Head"))
+insDoc(aux1, gLnk("R", "Translate PBA", "F3Diag_RightFrame.html#Translate PBA"))
+insDoc(aux1, gLnk("R", "Translate Physical Sector", "F3Diag_RightFrame.html#Translate Physical Sector"))
+insDoc(aux1, gLnk("R", "Translate Physical Cylinder, Logical Head and Physical Sector", "F3Diag_RightFrame.html#Translate Physical Cylinder, Logical Head and Physical Sector"))
+insDoc(aux1, gLnk("R", "Translate Physical Cylinder, Logical Head and Physical Wedge", "F3Diag_RightFrame.html#Translate Physical Cylinder, Logical Head and Physical Wedge"))
+insDoc(aux1, gLnk("R", "Translate Symbols From Index", "F3Diag_RightFrame.html#Translate Symbols From Index"))
+insDoc(aux1, gLnk("R", "Translate Wedge", "F3Diag_RightFrame.html#Translate Wedge"))
+insDoc(aux1, gLnk("R", "Write CHS", "F3Diag_RightFrame.html#Write CHS"))
+insDoc(aux1, gLnk("R", "Write LBA", "F3Diag_RightFrame.html#Write LBA"))
+insDoc(aux1, gLnk("R", "Write Long CHS or Write System CHS", "F3Diag_RightFrame.html#Write Long CHS or Write System CHS"))
+insDoc(aux1, gLnk("R", "Write Peripheral Register - channel or preamp", "F3Diag_RightFrame.html#Write Peripheral Register - channel or preamp"))
+insDoc(aux1, gLnk("R", "Write, Read, Read CHS", "F3Diag_RightFrame.html#Write, Read, Read CHS"))
+insDoc(aux1, gLnk("R", "Write, Read, Read LBA", "F3Diag_RightFrame.html#Write, Read, Read LBA"))
+insDoc(aux1, gLnk("R", "Write, Read, Write, Read CHS", "F3Diag_RightFrame.html#Write, Read, Write, Read CHS"))
+insDoc(aux1, gLnk("R", "Write Servo RAM at Address", "F3Diag_RightFrame.html#Write Servo RAM at Address"))
+insDoc(aux1, gLnk("R", "Write Servo RAM at Index", "F3Diag_RightFrame.html#Write Servo RAM at Index"))
+insDoc(aux1, gLnk("R", "Write Verify CHS", "F3Diag_RightFrame.html#Write Verify CHS"))
+insDoc(aux1, gLnk("R", "Write Wedge", "F3Diag_RightFrame.html#Write Wedge"))
+aux1 = insFld(foldersTree, gFld("Error Codes/Tracing Information", "F3Diag_RightFrame.html#Error Codes/Tracing Information"))
+insDoc(aux1, gLnk("R", "DiagError - Diagnostic Error Codes", "F3Diag_RightFrame.html#DiagError - Diagnostic Error Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Request Type Codes", "F3Diag_RightFrame.html#Read/Write Request Type Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Status Codes", "F3Diag_RightFrame.html#Read/Write Status Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Sense Error Codes", "F3Diag_RightFrame.html#Read/Write Sense Error Codes"))
+insDoc(aux1, gLnk("R", "Read/Write Retry Characters", "F3Diag_RightFrame.html#Read/Write Retry Characters"))
+insDoc(aux1, gLnk("R", "Flash LED Codes", "F3Diag_RightFrame.html#Flash LED Codes"))
+</script>
+</head>
+<body style="margin:0" scroll="yes">
+<table border="8" height="48" width="100%" bordercolor="white">
+   <tr>
+      <td align="center" valign="center">
+         <form name="search" onSubmit="return FindInPage(this.string.value);">
+            <input name="string" type="text" onChange="n = 0;">
+            <input type="submit" value="Search">
+       </td>
+   </tr>
+   <tr>
+      <td align="center" valign="center">
+         <a href="F3Diag_RightFrame.html#Top" class="sub" target="basefrm"><small>page top</small></a>
+         <small>|</small>
+         <a href="javascript:window.location.reload()" class="sub"><small>reset</small></a>
+         <font color="#FFFFFF">.</font><br><small><small>print: </small>
+         <a href="#" class="sub" OnClick="alert('Please keep in mind that the left/right margins need to be reduced when printing this document (in IE this can be done in the \'Page Setup\' feature).');window.parent.frames['basefrm'].focus();window.parent.frames['basefrm'].print();"><small>document</small></a>
+         </small><font color="#FFFFFF">.</font></form>
+      </td>
+   </tr>
+</table>
+<div style="position:absolute; top:79; left:0;"><hr width="100%"></div>
+<div style="position:absolute; top:88; left:0;"><a href="http://www.seagate.com/" class="slink" target="_new"> &nbsp;&nbsp;&sect;eagate Technology - <i>We turn on ideas.</i></a></font></div>
+<div style="position:absolute; top:95; left:0;"><hr width="100%"></div>
+<table border="3" width="100%" bordercolor="white">
+   <tr>
+      <td>
+         <script>initializeDocument()</script>
+         <noscript>Please enable JavaScript in your browser.</noscript>
+      </td>
+   </tr>
+</table>
+</body>
+</html>

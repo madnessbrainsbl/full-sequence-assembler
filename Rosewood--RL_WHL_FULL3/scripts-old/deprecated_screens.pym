@@ -1,0 +1,1939 @@
+# Do NOT modify or remove this copyright and confidentiality notice!
+#
+# Copyright (c) 2001 - $Date: 2015/04/29 $ Seagate Technology, LLC.
+#
+# The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+# Portions are also trade secret. Any use, duplication, derivation, distribution
+# or disclosure of this code, for any reason, not expressly authorized is
+# prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+#
+
+Description: Included in this file are classes or individual methods which have been
+deprecated as of 5/28/14. Deprecated code is categorized by the file from which it
+was removed.  Each section contains only deprecated code belonging to that file.
+
+#####################################START OF SECTION######################################################
+###########################################################################################################
+File Revised:       //depot/SGP/PF3/LCO/scripts/base_SerialTest.py
+###########################################################################################################
+class CCleanDisk(CState):
+   """
+      Write 1/2 Offtrack with 1T pattern all surfaces
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      self.oProc = CProcess()
+      cleanPrm = TP.prm_AFS_1T_OffTrk_Write_109.copy()
+
+      if (not testSwitch.FORCE_MR_CLEAN) or (int(DriveAttributes.get('RWK_CYCLE',0)) <= 0):
+         if DriveAttributes.get('FLAW_SCAN_TESTED',0) == 0:
+            objMsg.printMsg("Drive never flawscanned: no reason to clean disc")
+            return
+
+      objMsg.printMsg("CLEANING DISK")
+      if testSwitch.ENABLE_T175_ZAP_CONTROL:
+         self.oProc.St(TP.zapPrm_175_zapOff)
+      else:
+         self.oProc.St(TP.setZapOffPrm_011)
+
+      if testSwitch.BF_0119072_231166_DISABLE_SKIP_TRACK_LOG_CLEAN_DISC:
+         cleanPrm['CWORD1'] = cleanPrm['CWORD1'] & 0xFFFD
+
+      if not testSwitch.auditTest:
+         self.oProc.St(cleanPrm)
+      else:
+         self.auditTestCleanDisk(cleanPrm)
+
+
+   def auditTestCleanDisk(self,inPrm):
+      self.oUtility = Utility.CUtility()
+      auditCDPrm = inPrm.copy()
+      objMsg.printMsg("                       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA                         ",objMsg.CMessLvl.IMPORTANT)
+      objMsg.printMsg("              ******** AUDIT TEST: HEADS AND TRACK BANDS SET IN RAP TABLE ********             ",objMsg.CMessLvl.IMPORTANT)
+      for head, zoneGroups in self.dut.auditTestRAPDict.items():
+         hdMask = (head<<8) + head
+         auditCDPrm["HEAD_RANGE"] = (hdMask)
+         for band in zoneGroups:
+            startCyl = band[0]
+            endCyl = band[1]
+            auditCDPrm["timeout"] = 2*(endCyl-startCyl)
+            upperWord,lowerWord = self.oUtility.ReturnTestCylWord(startCyl)
+            auditCDPrm["START_CYL"] = upperWord,lowerWord
+            upperWord,lowerWord = self.oUtility.ReturnTestCylWord(endCyl)
+            auditCDPrm["END_CYL"] = upperWord,lowerWord
+            self.oProc.St(auditCDPrm)
+
+
+#----------------------------------------------------------------------------------------------------------
+class CContactModScreen(CState):
+   """
+   Class that will use T228 to perform a contact modulation screen
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      oProc = CProcess()
+
+      # Disable SWD
+      oProc.St(TP.disableAGCUnsafes_11)
+
+      # Run T228
+      contactModParms = TP.prm_228_ContactModScreen.copy()
+      for zc in contactModParms['zoneControl']:
+         for item in zc:
+            if item == 'zone':
+               #zoneMask = 1 << zc['zone']
+               zoneMask_low = 0
+               zoneMask_high = 0
+               if zc['zone'] < 32:
+                  zoneMask_low = 1 << zc['zone']
+               else:
+                  zoneMask_high = 1 << (zc['zone'] - 32)
+               #contactModParms['base']['ZONE_MASK'] = [zoneMask/0xFFFF, zoneMask%0x10000]
+               contactModParms['base']['ZONE_MASK'] = [zoneMask_low/0xFFFF, zoneMask_low%0x10000]
+               contactModParms['base']['ZONE_MASK_EXT'] = [zoneMask_high/0xFFFF, zoneMask_high%0x10000]
+            else:
+               contactModParms['base'][item] = zc[item]
+         oProc.St(contactModParms['base'])
+
+      # Enable SWD
+      oProc.St(TP.enableAGCUnsafes_11)
+
+
+#----------------------------------------------------------------------------------------------------------
+class CPreTrack0Write(CState):
+   """
+   Write a pattern to tracks outside of the calibrated track zero
+   """
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+
+   def run(self):
+      import serialScreen, sptCmds
+      oSerial = serialScreen.sptDiagCmds()
+
+      sptCmds.enableDiags()
+      oSerial.negTrackWrite(TP.prm_PreTrack0Write)
+      
+#----------------------------------------------------------------------------------------------------------
+class CResetMaxLBA(CState):
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      self.oSrvFunc = CServoFunc()
+      self.oFSO = CFSO()
+      self.oPreamp = CPreAmp()      
+      self.oFSO.getZoneTable() # get number of heads and zones on drive
+
+      objVbar = VBAR.CVBAR()
+
+      try:
+         objVbar.setMaxLBA()
+      finally:
+         self.dut.depopMask = []
+      
+#----------------------------------------------------------------------------------------------------------
+class CVerifyOCLIM(CState):
+   """
+   Verify OCLIM on all heads
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      oSrvFunc = CServoFunc()
+      oSrvFunc.checkOCLlimAllHds()
+
+#----------------------------------------------------------------------------------------------------------
+class CHSAOffset_SCRN(CState):
+   """
+      Description:
+         uneven disc to base plate gap
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+
+      depList = []
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      if testSwitch.FE_SGP_HSA_OFFSET_SCRN:
+
+         from AFH import CAFH
+         from PreAmp import CPreAmp
+         from AFH_mainLoop import CAFH_test135
+         from AFH import CclearanceDictionary
+         from AFH_constants import *
+
+         # libraries to link in.
+         from AFH_SIM import CAFH_Frames
+         import FSO
+         self.frm = CAFH_Frames()
+         self.mFSO = FSO.CFSO()
+         local_clrDict = CclearanceDictionary()
+
+         self.check_Head_mode = DISABLE
+
+         self.headList = range(objDut.imaxHead)
+         self.numMeasPos = len(TP.maskParams['tracks'])
+
+         self.frm.readFramesFromCM_SIM()
+         self.frm.display_frames(2)
+
+         firstState = 1
+
+         objMsg.printMsg("headList %s " %(str(self.headList)))
+         objMsg.printMsg("numMeasPos %s " %(str(self.numMeasPos)))
+         objMsg.printMsg("len DPES_FRAMES %s " %(str(len(self.frm.dPesSim.DPES_FRAMES))))
+
+         if (len(self.frm.dPesSim.DPES_FRAMES) < (self.dut.imaxHead * self.numMeasPos)):
+            ScrCmds.raiseException(11044, 'Insufficent Frames data found to calculate burnish check') # at this point print out as much as you can about the local data structures to assist in debug
+
+         # DH
+         if (((testSwitch.FE_0110575_341036_ENABLE_MEASURING_CONTACT_USING_TEST_135 == 1) and (testSwitch.FE_0132497_341036_AFH_ENABLE_DUAL_HEATER_SELF_TEST_SUPPORT == 1)) or \
+            ((testSwitch.FE_0110575_341036_ENABLE_MEASURING_CONTACT_USING_TEST_135 == 0) and (testSwitch.FE_0132497_341036_AFH_ENABLE_DUAL_HEATER_SELF_TEST_SUPPORT == 1))):
+            for frame in self.frm.dPesSim.DPES_FRAMES:
+               for iHead in self.headList:
+                  if ( (frame['mode'] == AFH_MODE) and (frame['stateIndex'] == firstState) and (frame['LGC_HD'] == iHead) and (frame['Heater Element'] == WRITER_HEATER_INDEX)):
+                     local_clrDict.setClrDict( iHead, frame['Zone'], frame['Read Clearance'], frame['WrtLoss'], frame['Write Clearance'], frame['Zone'] )
+         # T135
+         elif ((testSwitch.FE_0110575_341036_ENABLE_MEASURING_CONTACT_USING_TEST_135 == 1) and (testSwitch.FE_0132497_341036_AFH_ENABLE_DUAL_HEATER_SELF_TEST_SUPPORT == 0)):
+            for frame in self.frm.dPesSim.DPES_FRAMES:
+               for iHead in self.headList:
+                  if ( (frame['mode'] == AFH_MODE) and (frame['stateIndex'] == firstState) and (frame['LGC_HD'] == iHead)):
+                     local_clrDict.setClrDict( iHead, frame['Zone'], frame['Read Clearance'], frame['WrtLoss'], frame['Write Clearance'], frame['Zone'] )
+
+         else:
+            for frame in self.frm.dPesSim.DPES_FRAMES:
+               for iHead in self.headList:
+                  if ( (frame['mode'] == AFH_MODE) and (frame['stateIndex'] == firstState) and (frame['LGC_HD'] == iHead)):
+                     local_clrDict.setClrDict( iHead, frame['Measurement Number'], frame['Read Clearance'], frame['WrtLoss'], frame['Write Clearance'], frame['Zone'] )
+
+         objMsg.printMsg("local_clrDict %s " %(str(local_clrDict.clrDict)))
+
+         objMsg.printMsg(40*'*' + "Head Screen"  + 40*'*', objMsg.CMessLvl.IMPORTANT)
+         objMsg.printMsg("HEAD\t\tWrtClr\t\t\tRdClr\t\t\tWrtLost\t\tZone", objMsg.CMessLvl.IMPORTANT)
+
+         for iHead in local_clrDict.clrDict.keys():
+            headMeasList = local_clrDict.clrDict[iHead].keys()
+            headMeasList.sort()
+            for meas in headMeasList:    #each iterable is a dictionary
+               testVal = local_clrDict.clrDict[iHead][meas]
+               try:
+                  objMsg.printMsg('%2s\t\t%1.8f\t\t%1.8f\t\t%1.8f\t%2s' % (iHead, testVal[AFH_WHClr], testVal[AFH_RdClr], \
+                     testVal[AFH_WrtLoss], testVal[AFH_CLRDICT_ZONE_INDEX]), objMsg.CMessLvl.IMPORTANT)
+               except:
+                  pass
+
+         self.check_Head_mode = ENABLE
+         if self.check_Head_mode:
+            import math
+
+            headList = local_clrDict.clrDict.keys()
+            headList.sort()
+            maxHead = headList[-1]
+            objMsg.printMsg("headList %s " %(str(headList)))
+            objMsg.printMsg("maxHead %s " %(str(maxHead)))
+            objMsg.printMsg(40*'*' + "Head Delta Check" + 40*'*', objMsg.CMessLvl.IMPORTANT)
+            objMsg.printMsg("Hd Hd Pt\t\t(W+H - W+H) u\" ", objMsg.CMessLvl.IMPORTANT)
+
+            for iHead in local_clrDict.clrDict.keys():
+               headMeasList[iHead] = local_clrDict.clrDict[iHead].keys()
+               headMeasList[iHead].sort()
+               #objMsg.printMsg("headMeasList %s " %(str(headMeasList[iHead])))
+
+            for iHead in range(0, maxHead, 2):
+               for meas in headMeasList[iHead]:    #each iterable is a dictionary
+                  for meas2 in headMeasList[iHead+1]:
+                     if ( meas == meas2 ):
+                        #objMsg.printMsg("meas %s %s " %(str(meas), str(meas2)))
+
+                        if math.fabs( local_clrDict.clrDict[iHead][meas][AFH_WHClr] - local_clrDict.clrDict[iHead+1][meas][AFH_WHClr]) > 23:  # 0.09 u-inch
+                           objMsg.printMsg('HSA_Offset_Screen failed (limit: 23 angstroms): %s ' % (str(meas)))
+
+                        objMsg.printMsg('%s  %s  %s\t\t%1.8f' % (iHead, iHead+1, meas, local_clrDict.clrDict[iHead][meas][AFH_WHClr] - local_clrDict.clrDict[iHead+1][meas][AFH_WHClr]), objMsg.CMessLvl.IMPORTANT)
+
+         self.frm.clearFrames()
+         self.frm.display_frames()
+      else:
+         objMsg.printMsg("HSA_Offset_Screen is tunn off...")
+         
+
+#----------------------------------------------------------------------------------------------------------
+class CReadHSCODIDGuardBand(CState):
+   """
+   Write extreme OD and ID
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      self.objFs = CUserFlaw()
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      from Servo import CServoFunc
+      from Process import CCudacom
+      self.oSrvFunc = CServoFunc()
+      self.oServo = CServo()
+      self.oFSO = CFSO()
+      self.oOudacom = CCudacom()
+      self.oFSO.getZoneTable()
+      self.maxTrack = self.oFSO.dut.maxTrack
+      self.ODWriteTrack = self.params.get('OD_Pad',5)
+      self.IDWriteTrack = self.params.get('ID_Pad',5)
+      display = 0 # Do not display HSC for every
+
+      hd_zone_AVG_HSC_list = [[] for hd in range(0, self.dut.imaxHead)]
+      RAW_HSC_list = []
+
+      try:
+         for hd in range(self.dut.imaxHead):
+           ## OD tracks
+            for i in range(self.ODWriteTrack):
+               testcyl = 0 - i - 1
+               objMsg.printMsg("Hd=%s TestCyl=%s" % (hd, testcyl))
+               result, errorCode  = self.oServo.gethsc( testcyl, hd )
+               if errorCode:
+                  objMsg.printMsg('Error Code: %s during read HSC.' % (str(errorCode)))
+               else:
+                  RAW_HSC_list.append(result)
+            OD_AVG_HSC =0
+            for raw in RAW_HSC_list :
+                OD_AVG_HSC = OD_AVG_HSC + raw
+            OD_AVG_HSC = OD_AVG_HSC/(len(RAW_HSC_list))
+
+           ## ID tracks
+            endCyl = self.maxTrack[hd]
+            RAW_HSC_list = []
+            for i in range(self.IDWriteTrack):
+               testcyl = endCyl + i + 1
+               objMsg.printMsg("Hd=%s TestCyl=%s" % (hd, testcyl))
+               result, errorCode  = self.oServo.gethsc( testcyl, hd )
+               if errorCode:
+                  objMsg.printMsg('Error Code: %s during read HSC.' % (str(errorCode)))
+               else:
+                  RAW_HSC_list.append(result)
+            ID_AVG_HSC =0
+            for raw in RAW_HSC_list :
+               ID_AVG_HSC = ID_AVG_HSC + raw
+            ID_AVG_HSC = ID_AVG_HSC/(len(RAW_HSC_list))
+
+            hd_zone_AVG_HSC_list[hd].append(OD_AVG_HSC)
+            hd_zone_AVG_HSC_list[hd].append(ID_AVG_HSC)
+
+         if self.dut.nextOper == "FNC2":
+             self.dut.objSeq.curRegSPCID = 3000
+         elif self.dut.nextOper == "CRT2":
+             self.dut.objSeq.curRegSPCID = 3001
+         else:
+             self.dut.objSeq.curRegSPCID = 3002
+         for head in range(0, self.dut.imaxHead):
+             self.dut.dblData.Tables('P_HSC_OD_ID').addRecord({
+                 'SPC_ID'                    : self.dut.objSeq.curRegSPCID,
+                 'OCCURRENCE'                : self.dut.objSeq.getOccurrence(),
+                 'SEQ'                       : self.dut.objSeq.curSeq,
+                 'TEST_SEQ_EVENT'            : self.dut.objSeq.getTestSeqEvent(0),
+                 'HD_PHYS_PSN'               : int(head),  # hd
+                 'HSC_OD'                    : int(hd_zone_AVG_HSC_list[head][0]), # Avg HSC for OD track
+                 'HSC_ID'                    : int(hd_zone_AVG_HSC_list[head][1]), # Avg HSC for ID track
+                 })
+
+         objMsg.printMsg("self.dut.objSeq.curRegSPCID %s"  %(str(self.dut.objSeq.curRegSPCID)))
+         objMsg.printMsg("P_HSC_OD_ID %s"  %(str(self.dut.dblData.Tables('P_HSC_OD_ID'))))
+         objMsg.printDblogBin(self.dut.dblData.Tables('P_HSC_OD_ID'))
+      except:
+         objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1) #perform power cycle before this test
+         pass
+      objMsg.printMsg("<<<<<<<<<<<<<<<<<<<<<<<<<                 End                     >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
+
+#----------------------------------------------------------------------------------------------------------
+class CSW_Scrn(CState):
+   """
+      Description: Class that will perform writer heater backoff BER data collection and Delta BER check
+      Base: N/A
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      from RdWr import CRdWrScreen
+
+      if testSwitch.virtualRun: return
+
+      objMsg.printMsg("SW_Scrn Test started...")
+
+      oRdWr = CRdWrScreen()
+      odPES  = AFH.CdPES(TP.masterHeatPrm_11, TP.defaultOCLIM)
+      CProcess().St({'test_num': 172, 'prm_name':'displayClearanceTable', 'timeout':1200, 'spc_id': 100, 'CWORD1':5,})
+      CProcess().St({'test_num': 172, 'prm_name':'P172_AFH_WORKING_ADAPTS', 'timeout':1200, 'spc_id': 100, 'CWORD1':4,})
+      tgtWrClr = []
+      adj_pct_tgtClr = 0.7
+      afhZoneTargets_SW = TP.afhZoneTargets.copy()
+      objMsg.printMsg('TGT_WRT_CLR backoff by:   %f' % (adj_pct_tgtClr))
+
+      for zn in range(self.dut.numZones+1):
+         adjtgtWrClr = ((1 + adj_pct_tgtClr) * TP.afhZoneTargets['TGT_WRT_CLR'][zn])
+         tgtWrClr.append(adjtgtWrClr)
+      afhZoneTargets_SW['TGT_WRT_CLR'] = tgtWrClr
+
+      odPES.setClearanceTargets(TP.afhTargetClearance_by_zone, afhZoneTargets_SW, range(0, int(self.dut.numZones + 1)))
+      CProcess().St(TP.activeClearControl_178)
+      CProcess().St({'test_num': 172, 'prm_name':'displayClearanceTable', 'timeout':1200, 'spc_id': 101, 'CWORD1':5,})
+      CProcess().St({'test_num': 172, 'prm_name':'P172_AFH_WORKING_ADAPTS', 'timeout':1200, 'spc_id': 101, 'CWORD1':4,})
+
+      SERprm = Utility.CUtility().copy(TP.prm_quickSER_250)
+      SetFailSafe()
+      oRdWr.quickSymbolErrorRate(SERprm,flawListMask=0x140,spc_id=3,numRetries=1)
+      ClearFailSafe()
+      odPES.setClearanceTargets(TP.afhTargetClearance_by_zone, TP.afhZoneTargets, range(0, int(self.dut.numZones + 1)))
+      CProcess().St(TP.activeClearControl_178)
+      objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+      CProcess().St({'test_num': 172, 'prm_name':'displayClearanceTable', 'timeout':1200, 'spc_id': 102, 'CWORD1':5,})
+      CProcess().St({'test_num': 172, 'prm_name':'P172_AFH_WORKING_ADAPTS', 'timeout':1200, 'spc_id': 102, 'CWORD1':4,})
+
+      if testSwitch.RUN_SKIPWRITE_SCRN_FAIL_ENABLE:
+         self.checkDeltaBER()
+         self.checkBackoffBER()
+
+   def checkBackoffBER(self):
+      ec = 10632
+      backoff_ber = self.dut.dblData.Tables('P250_ERROR_RATE_BY_ZONE').chopDbLog('SPC_ID', 'match',str(3))
+      for i in xrange(len(backoff_ber)):
+         if int(backoff_ber[i]['DATA_ZONE']) in TP.SkipWriteScrn_spec['TEST_ZONE']:
+            ber_value =  float(backoff_ber[i]['RAW_ERROR_RATE'])
+            if abs(ber_value) < TP.SkipWriteScrn_spec['Clr_Backoff_BER_limit'] and ber_value < 0:
+               if not self.downGradeOnFly(1, ec):
+                  ScrCmds.raiseException(ec, "Zn%d Backoff BER fail." % int(backoff_ber[i]['DATA_ZONE']))
+
+   def checkDeltaBER(self):
+      ec = 14574
+      (maxDiff, minDiff, diffData, entrySigVal) = self.dut.dblData.Tables('P250_ERROR_RATE_BY_ZONE').diffDbLog(diffItem='RAW_ERROR_RATE',entrySig='SPC_ID',sigValArg=[2,3],sortOrder=['HD_LGC_PSN','DATA_ZONE'])
+      for item in diffData:
+         if item['DATA_ZONE'] in TP.SkipWriteScrn_spec['TEST_ZONE']:
+            if item['difference'] < TP.SkipWriteScrn_spec['max_diff'] and item['RAW_ERROR_RATE__SPC_ID_2'] < 0 and item['RAW_ERROR_RATE__SPC_ID_3'] < 0:
+               if not self.downGradeOnFly(1,ec):
+                  ScrCmds.raiseException(ec, "Zn%d Backoff Delta BER fail." % item['DATA_ZONE'])
+
+      if testSwitch.PRINT_TABLE_P_DELTA_RRAW:
+         for item in diffData:
+            hd_phys_psn = self.dut.LgcToPhysHdMap[int(item['HD_LGC_PSN'])]
+            data_zone = item['DATA_ZONE']
+            delta_rraw = item['difference']
+            self.dut.dblData.Tables('P_DELTA_RRAW').addRecord(
+            {
+               'HD_PHYS_PSN':          hd_phys_psn,
+               'DATA_ZONE':            data_zone,
+               'SPC_ID':               self.dut.objSeq.curRegSPCID,
+               'OCCURRENCE':           self.dut.objSeq.getOccurrence(),
+               'SEQ':                  self.dut.objSeq.curSeq,
+               'TEST_SEQ_EVENT':       self.dut.objSeq.getTestSeqEvent(0),
+               'DELTA_RRAW':           delta_rraw,
+            })
+         objMsg.printDblogBin(self.dut.dblData.Tables('P_DELTA_RRAW'))
+
+#----------------------------------------------------------------------------------------------------------
+###########################################################################################################
+#####APO CONSTANTS#########
+DEBUG_APO = 0
+#####APO CONSTANTS#########
+###########################################################################################################
+class CSymBer_Apo(CState):
+   """
+      Description: Class that perform Adaptive Preheat Optimization.
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      import serialScreen, sptCmds
+
+      if not testSwitch.RUN_APO_DELTABER:
+         return
+      objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+      # Set some default variables
+      Left_Right_Padding_for_CleanUp = 3
+      SelectedZones = None
+      SectorStep = 10
+      FailSafe = 1
+
+#======================= S T A R T ========================
+#                Collect Testing Parameters
+#==========================================================
+      if hasattr(TP,'prm_F3_APO_delta_BER'):
+         SelectedZones = TP.prm_F3_APO_delta_BER['Zones']
+         SectorStep = TP.prm_F3_APO_delta_BER['SectorStep']
+         FailSafe = TP.prm_F3_APO_delta_BER['FailSafe']
+      elif 'param' in self.params.keys():
+         SelectedZones = self.params['param'].get('Zones', SelectedZones)
+         SectorStep = self.params['param'].get('SectorStep', SectorStep)
+         FailSafe = self.params['param'].get('FailSafe', FailSafe)
+
+      objMsg.printMsg("Zones: %s" % (str(SelectedZones)))   # 3 tracks for OD, MD and ID
+      objMsg.printMsg("SectorStep: %d" % (SectorStep))
+      objMsg.printMsg("FailSafe: %d" % (FailSafe))
+      objMsg.printMsg("CleanUp PadSize: %d" % (Left_Right_Padding_for_CleanUp))
+
+#======================= S T A R T ========================
+#                  Misc. Initializations
+#==========================================================
+      oSerial = serialScreen.sptDiagCmds()
+      oSerial.enableDiags()
+      oSerial.syncBaudRate(Baud38400)
+
+      sptCmds.gotoLevel('2')
+      # Get Zone Table for each head
+      numCyls,zones = oSerial.getZoneInfo()
+      objMsg.printMsg("numCyls %s" %(numCyls))
+      objMsg.printMsg("zones %s" %(zones))
+
+      # For Track Qualification.
+      MaxQual_Retries = 10          # Maximum no of Retries for Track Qualification
+      QualRetry_TrkOffset = 50      # Track Offset to the next retry.
+      self.AllHds_ApoSymBer = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+
+      # Select Zones
+      TestZones = [range(self.dut.numZones)] * self.dut.imaxHead
+      if testSwitch.SKIPZONE and not testSwitch.virtualRun:
+         for (hd, zn) in self.dut.skipzn:
+            try:
+               TestZones[hd].remove(zn)
+            except:
+               objMsg.printMsg("H[%d] no Z[%d]" % (hd, zn))
+               pass
+
+      self.Apo_TestZones = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         if not SelectedZones: #use default test zones (od, md, id)
+            temp = [TestZones[hd][1], TestZones[hd][len(TestZones[hd]) / 2], TestZones[hd][-1]]
+         else:
+            temp = [ zn for zn in SelectedZones if zn in TestZones[hd] ]
+         self.Apo_TestZones[sHd] = temp
+      objMsg.printMsg("Apo_TestZones %s" % (str(self.Apo_TestZones)))
+
+      # Select Tracks
+      zonePat = re.compile('\s*Rate\s*(?P<zone>[\dA-Fa-f]+)\s+(?P<minCyl>[\dA-Fa-f]+)-[\dA-Fa-f]+\s+(?P<minLogCyl>[\dA-Fa-f]+)-(?P<maxLogCyl>[\dA-Fa-f]+)')
+      minLogCyl = {}
+      maxLogCyl = {}
+      for hd in range(self.dut.imaxHead):
+         for zn in range(self.dut.numZones + 1):
+            oSerial.flush()
+            accumulator = oSerial.PBlock('x0,%x,%x\n\n' % (hd,zn))
+            data = sptCmds.promptRead(100, accumulator = accumulator, loopSleepTime = 0)
+            zoneMatch = zonePat.search(data)
+            if testSwitch.virtualRun:
+               minLogCyl = {0: {0: 0, 1: 2820, 2: 10460, 3: 17490, 4: 27885, 5: 36909, 6: 45557, 7: 51915, 8: 58611, 9: 66196, \
+                               10: 75076, 11: 81700, 12: 89428, 13: 96972, 14: 103560, 15: 110514, 16: 117468, 17: 126801, 18: 134853, \
+                               19: 139794, 20: 146565, 21: 152055, 22: 159924, 23: 166364, 24: 172804, 25: 179244, 26: 186089, 27: 192564, \
+                               28: 197958, 29: 204690, 30: 212357, 31: 221193}, \
+                            1: {0: 0, 1: 3015, 2: 11175, 3: 18686, 4: 29796, 5: 39444, 6: 48644, 7: 55410, 8: 62538, 9: 70615, 10: 80071, \
+                               11: 87127, 12: 95359, 13: 103354, 14: 110374, 15: 117746, 16: 125118, 17: 135012, 18: 143504, 19: 148715, \
+                               20: 155856, 21: 161646, 22: 169945, 23: 176700, 24: 183455, 25: 190245, 26: 197423, 27: 204213, 28: 209839, \
+                               29: 216859, 30: 224854, 31: 234066}}
+               maxLogCyl = {0: {0: 2819, 1: 10459, 2: 17489, 3: 27884, 4: 36908, 5: 45556, 6: 51914, 7: 58610, 8: 66195, 9: 75075, 10: 81699,\
+                               11: 89427, 12: 96971, 13: 103559, 14: 110513, 15: 117467, 16: 126800, 17: 134852, 18: 139793, 19: 146564,\
+                               20: 152054, 21: 159923, 22: 166363, 23: 172803, 24: 179243, 25: 186088, 26: 192563, 27: 197957, 28: 204689, \
+                               29: 212356, 30: 221192, 31: 221570}, \
+                            1: {0: 3014, 1: 11174, 2: 18685, 3: 29795, 4: 39443, 5: 48643, 6: 55409, 7: 62537, 8: 70614, 9: 80070, 10: 87126, \
+                               11: 95358, 12: 103353, 13: 110373, 14: 117745, 15: 125117, 16: 135011, 17: 143503, 18: 148714, 19: 155855, \
+                               20: 161645, 21: 169944, 22: 176699, 23: 183454, 24: 190244, 25: 197422, 26: 204212, 27: 209838, 28: 216858,\
+                               29: 224853, 30: 234065, 31: 234469}}
+
+            elif zoneMatch and not(data.strip().startswith('F3')):
+               tempDict = zoneMatch.groupdict()
+               minLogCyl.setdefault(hd,{})[int(tempDict['zone'],16)] = int(tempDict['minLogCyl'],16)
+               maxLogCyl.setdefault(hd,{})[int(tempDict['zone'],16)] = int(tempDict['maxLogCyl'],16)
+      objMsg.printMsg("minLogCyl of zone %s" %(minLogCyl))
+      objMsg.printMsg("maxLogCyl of zone %s" %(maxLogCyl))
+
+      self.Apo_TestTracks = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for zn in self.Apo_TestZones[sHd]:
+            self.Apo_TestTracks[sHd].append(minLogCyl[hd][zn] + (maxLogCyl[hd][zn] - minLogCyl[hd][zn]) / 2)
+      objMsg.printMsg("Apo_TestTracks %s" % (str(self.Apo_TestTracks)))
+
+#======================= S T A R T ========================
+#            Qualify Tracks for Writes & Reads
+#==========================================================
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         trk = 0
+         while trk < len(self.Apo_TestTracks[sHd]):
+            QualTrk = self.Apo_TestTracks[sHd][trk]
+            Qual_Dir = 0
+            Qual_Retry = 1
+            while True:
+               objMsg.printMsg("Qualify Hd[%d] Trk[0x%X] Retry[%d]" % (hd, QualTrk, Qual_Retry))
+
+               sptCmds.gotoLevel('2')
+               sptCmds.sendDiagCmd("A0", timeout = 500)
+               sptCmds.sendDiagCmd("S%X,%X" %(QualTrk, hd), timeout = 500, stopOnError = 0)
+               objMsg.printMsg("Set Retry: Y,,,,141C4")
+               sptCmds.sendDiagCmd("Y,,,,141C4", timeout = 500)
+               self.ShowCurrentCHS()
+               sptCmds.sendDiagCmd("P0", timeout = 500)
+               Error = self.Write_CheckError(PrintResults = True)
+               if Error == 0:
+                  Error = self.Read_CheckError(PrintResults = True)    # continue to Read if no Write Error.
+
+               if Error and (Qual_Retry < MaxQual_Retries):
+                  if Qual_Dir == 0:
+                     if QualTrk == self.Apo_TestTracks[sHd][-1]:
+                        Qual_Dir = -1
+                     else:
+                        Qual_Dir = 1
+                  QualTrk += QualRetry_TrkOffset * Qual_Dir
+               elif not Error:
+                  self.Apo_TestTracks[sHd][trk] = QualTrk
+                  objMsg.printMsg("T[0x%X] pass" % (QualTrk))
+                  trk += 1
+                  break
+               else:
+                  self.Apo_TestTracks[sHd].pop(trk)
+                  objMsg.printMsg("Due to qualify failed, one track is removed for H[%d]!!!" % (hd))
+                  break
+
+               Qual_Retry += 1
+            # --* while True - Loop
+      # --* for hd in range(self.dut.imaxHead) - Loop
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in self.Apo_TestTracks[sHd]:
+            objMsg.printMsg("Target CHS(Hex):%06X:%X:0000" % (trk, hd))
+
+#=========================== S T A R T ============================
+#                  Adaptive Preheat Optimization
+#==================================================================
+      self.QCmd_AllHds_ApoSymBer(self.Apo_TestTracks, self.AllHds_ApoSymBer, SectorStep = SectorStep, debug = DEBUG_APO)
+
+#=========================== S T A R T ============================
+#                       APO Data Processing
+#==================================================================
+      if testSwitch.virtualRun:
+         objMsg.printMsg("Skip data processing in VE")
+         return
+      WorstLongBer = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      WorstShortBer = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      FirstSectorDelta = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      StableSectorDelta = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         objMsg.printMsg("=================== Final APO Data For Head %d ====================" % (hd))
+         objMsg.printMsg("  Head\t Track\tSector\t  Long\t Short\t Delta")
+         for trk in range(len(self.Apo_TestTracks[sHd])):
+            if len(self.AllHds_ApoSymBer[sHd][trk]) == 0:
+               continue
+            WorstLongBer[sHd].append(100.0)
+            WorstShortBer[sHd].append(100.0)
+            StableSectorDelta[sHd].append(0.0)
+            Sector = 0
+            for Record in range(len(self.AllHds_ApoSymBer[sHd][trk]) / 2):
+               LongBer = float(self.AllHds_ApoSymBer[sHd][trk][Record])
+               ShortBer = float(self.AllHds_ApoSymBer[sHd][trk][len(self.AllHds_ApoSymBer[sHd][trk]) / 2 + Record])
+               WorstLongBer[sHd][trk] = min(WorstLongBer[sHd][trk], LongBer)
+               WorstShortBer[sHd][trk] = min(WorstShortBer[sHd][trk], ShortBer)
+               DeltaBer = LongBer - ShortBer
+               Sector = SectorStep * Record
+               if (Record >= len(self.AllHds_ApoSymBer[sHd][trk]) / 2 - 4):
+                  StableSectorDelta[sHd][trk] = StableSectorDelta[sHd][trk] + DeltaBer
+               objMsg.printMsg("%6d\t%6X\t   %03d\t%+2.3f\t%+2.3f\t%+2.3f" % (hd, self.Apo_TestTracks[sHd][trk], Sector, LongBer, ShortBer, DeltaBer))
+            FirstSectorDelta[sHd].append(float(self.AllHds_ApoSymBer[sHd][trk][0]) - float(self.AllHds_ApoSymBer[sHd][trk][len(self.AllHds_ApoSymBer[sHd][trk]) / 2]))
+            StableSectorDelta[sHd][trk] = StableSectorDelta[sHd][trk] / 4
+            objMsg.printMsg("FirstSectorDelta = %+2.3f" % (FirstSectorDelta[sHd][trk]))
+            objMsg.printMsg("StableSectorDelta = %+2.4f" % (StableSectorDelta[sHd][trk]))
+            objMsg.printMsg("WorstLongBer = %+2.3f, WorstShortBer = %+2.3f" % (WorstLongBer[sHd][trk], WorstShortBer[sHd][trk]))
+
+      # --* for hd in range(self.dut.imaxHead) - Loop
+
+#================================= S T A R T ===================================
+#       Re-write Test tracks with '0" pattern (For LODT tests).
+#===============================================================================
+      objMsg.printMsg("Power Cycle to restore default retry")
+      objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+      oSerial = serialScreen.sptDiagCmds()
+      oSerial.enableDiags()
+      oSerial.syncBaudRate(Baud38400)
+
+      #----------------------------------------------------------------
+      # Set up error table.
+      #----------------------------------------------------------------
+      sptCmds.gotoLevel('L')
+      sptCmds.sendDiagCmd("E1", timeout = 500, raiseException = 0)
+      sptCmds.sendDiagCmd("iFFFC", timeout = 500, raiseException = 0)
+
+      objMsg.printMsg("Re-Write Test Tracks with 0000 Pattern")
+      sptCmds.gotoLevel('2')
+      sptCmds.sendDiagCmd('A2', timeout = 500, printResult = DEBUG_APO, stopOnError = 0)
+      #----------------------------------------------------------------
+      # Set up Write/Read settings.
+      #----------------------------------------------------------------
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in self.Apo_TestTracks[sHd]:
+            sptCmds.sendDiagCmd("S%X,%X" %(trk - Left_Right_Padding_for_CleanUp, hd), timeout = 500, stopOnError = 0)
+            self.ShowCurrentCHS()
+            sptCmds.sendDiagCmd("P0000,,C", timeout = 500)
+            Q_LoopCnt = Left_Right_Padding_for_CleanUp * 2 + 1
+            sptCmds.sendDiagCmd("L1,%X" % Q_LoopCnt, printResult = DEBUG_APO, timeout = 500, stopOnError = 0)
+            sptCmds.sendDiagCmd("Q", timeout = 500, stopOnError = 0)
+            self.ShowCurrentCHS()
+      objMsg.printMsg("Re-Write Completed!\n")
+
+      #----------------------------------------------------------------
+      # Check error table for defects.
+      #----------------------------------------------------------------
+      sptCmds.gotoLevel('L')
+      sptCmds.sendDiagCmd("E0", timeout = 500, raiseException = 0)
+      result = sptCmds.sendDiagCmd("D", timeout = 500, raiseException = 0, printResult = True)
+      offset = result.find('Log FFFC Entries ')
+      if offset >= 0: defectCnt = int(result[offset+17:offset+19],16)
+      else: defectCnt = 0
+      if (defectCnt > 0) :
+         result_lines = result.splitlines()
+         offset2 = result_lines[3].find('RWERR')
+         if offset2 >= 0:
+            for i in range(defectCnt):
+               if int(result_lines[5 + i][offset2:offset2+8], 16)!=0:
+                  if testSwitch.SKIPZONE:
+                     offsetCHS = result_lines[3].find('LLL CHS')
+                     head = int(result_lines[5 + i][offsetCHS:offsetCHS+15].split('.')[1], 16)
+                     objMsg.printMsg('LLL CHS head: %d' % (head))
+                  objMsg.printMsg("Re-Write FAIL !!!!!\n")
+                  ScrCmds.raiseException(10566, "Found defects during write pass!!! Test Fail!")
+               else:
+                  objMsg.printMsg('Entry:%d, RWERR==0, so bypass it!' % (i+1))
+         else:
+            objMsg.printMsg("Re-Write FAIL !!!!!\n")
+            ScrCmds.raiseException(10566, "Found defects during write pass!!! Test Fail!")
+
+#=========================== S T A R T ============================
+# Update Data to DBLog - Temp. Need to update with new DBLog table
+#==================================================================
+      ######################## DBLOG Implementaion- Setup
+      curSeq,occurrence,testSeqEvent = self.dut.objSeq.registerCurrentTest(0)
+      ########################
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in range(len(self.Apo_TestTracks[sHd])):
+            if len(self.AllHds_ApoSymBer[sHd][trk]) == 0:
+               continue
+            Sector = 0
+            for Record in range(len(self.AllHds_ApoSymBer[sHd][trk]) / 2):
+               LongBer = float(self.AllHds_ApoSymBer[sHd][trk][Record])
+               ShortBer = float(self.AllHds_ApoSymBer[sHd][trk][len(self.AllHds_ApoSymBer[sHd][trk]) / 2 + Record])
+               DeltaBer = LongBer - ShortBer
+               Sector = SectorStep * Record
+
+               objDut.dblData.Tables('P_TEMP_APO_BER').addRecord(
+                              {
+                              'HD_PHYS_PSN': hd,
+                              'DATA_ZONE': self.Apo_TestZones[sHd][trk],
+                              'TRK_NUM': self.Apo_TestTracks[sHd][trk],
+                              'SECTOR': Sector,
+                              'LONG_BER': LongBer,
+                              'SHORT_BER': ShortBer,
+                              'SECTOR_DBER': DeltaBer,
+                              'FIRST_SECTOR_DBER': FirstSectorDelta[sHd][trk],
+                              'STABLE_SECTOR_DBER': StableSectorDelta[sHd][trk],
+                              'WORST_LONG_DBER': WorstLongBer[sHd][trk],
+                              'WORST_SHORT_DBER': WorstShortBer[sHd][trk],
+                              'SPC_ID': 1,
+                              'OCCURRENCE': occurrence,
+                              'SEQ': curSeq,
+                              'TEST_SEQ_EVENT': testSeqEvent,
+                              })
+      objMsg.printDblogBin(objDut.dblData.Tables('P_TEMP_APO_BER'))
+      # --* for hd in range(self.dut.imaxHead) - Loop
+
+#=========================== S T A R T ============================
+#                   Fail the Drive if Criteria not met.
+#==================================================================
+      # if not FailSafe and not testSwitch.virtualRun:
+         # for hd in range(self.dut.imaxHead):
+            # sHd = 'H' + str(hd)
+            # if self.Head_Status[sHd]:
+               # ScrCmds.raiseException(self.Head_Status[sHd], "APO Fail at Head %d" % (hd))
+
+         # --* for hd in range(self.dut.imaxHead) - Loop
+
+
+      # ScrCmds.raiseException(14805, "Just Fail the drive here.!")
+
+#==================================================================
+#               Delta BER APO Screening - Completed
+#==================================================================
+      objMsg.printMsg("======== Delta BER APO Screening - COMPLETED =========")
+      objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+
+   #-------------------------------------------------------------------------------------------------------
+   def Get_NumOfSectors(self, debug = 0):
+      import re
+      import sptCmds
+
+      sptCmds.gotoLevel('2')
+      data = sptCmds.sendDiagCmd("i0", timeout = 500, printResult = debug, stopOnError = 0)
+      if testSwitch.virtualRun:
+         num_string = '200'
+      else:
+         try:
+            num_string = re.search(r'^([\dA-Fa-f]{4})\s+([\dA-Fa-f]{4}\s+){4,}\n', data, re.M).group(1)
+         except:
+            objMsg.printMsg("No response for i0 command!!!")
+            num_string = None
+
+      if num_string:
+         return int(num_string, 16)
+      else:
+         return 0
+
+    #-------------------------------------------------------------------------------------------------------
+   def Get_ApoSymBer(self, SymBer, TgtHd):
+      import sptCmds
+      if TgtHd >= self.dut.imaxHead: return
+      data = sptCmds.execOnlineCmd('`', timeout=20, waitLoops=100)
+
+      if DEBUG_APO: objMsg.printMsg("` return data = %s" % (data))
+
+      SearchString = 'Hd ' + str(TgtHd)
+      offset = data.find(SearchString)
+      if offset >= 0:
+         Sym_string = data[offset+ber_log_start:offset+ber_log_end]
+         Symbol_BER = Sym_string.replace(" ", "")
+         SymBer.append(str('%.2f' % (float(Symbol_BER))))
+
+      sptCmds.sendDiagCmd(CR, timeout = 500)
+
+   #-------------------------------------------------------------------------------------------------------
+   def QCmd_AllHds_ApoSymBer(self, TestTracks, SymBer, SectorStep = 10, debug = 0):
+      import sptCmds
+
+      #----------------------------------------------------------------
+      # Set up Write/Read settings.
+      #----------------------------------------------------------------
+      sptCmds.gotoLevel('2')
+      objMsg.printMsg("Set Retry: Y,,,,141C4")
+      sptCmds.sendDiagCmd("Y,,,,141C4", timeout = 500, printResult = debug)
+      sptCmds.sendDiagCmd('A0', timeout = 500, printResult = debug, stopOnError = 0)
+
+      #----------------------------------------------------------------
+      # Long Write Sector BER Measurement
+      #----------------------------------------------------------------
+      SectorCount = dict(('H'+str(x), []) for x in range(self.dut.imaxHead))
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in range(len(TestTracks[sHd])):
+            sptCmds.sendDiagCmd("S%X,%X" %(TestTracks[sHd][trk], hd), timeout = 500, printResult = debug, stopOnError = 0)
+            self.ShowCurrentCHS()
+            SectorCount[sHd].append(self.Get_NumOfSectors(debug = debug))
+            if debug:
+               objMsg.printMsg("H[%d] T[0x%X] SectorCount: %d" % (hd, TestTracks[sHd][trk], SectorCount[sHd][trk]))
+            if SectorCount[sHd][trk] == 0:
+               continue
+            sptCmds.sendDiagCmd("W", timeout = 500, printResult = debug, stopOnError = 0)
+
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in range(len(TestTracks[sHd])):
+            SymBer[sHd].append([])
+            if SectorCount[sHd][trk] == 0:
+               continue
+            sptCmds.sendDiagCmd("S%X,%X" %(TestTracks[sHd][trk], hd), timeout = 500, printResult = debug, stopOnError = 0)
+            self.ShowCurrentCHS()
+            for Sector in range(0, SectorCount[sHd][trk], SectorStep):
+               self.Enable_StatsLog()
+               sptCmds.sendDiagCmd("L11,20", timeout = 500, printResult = debug, stopOnError = 0)
+               sptCmds.sendDiagCmd("R%X" % (Sector), timeout = 500, printResult = debug, stopOnError = 0)
+               self.Get_ApoSymBer(SymBer[sHd][trk], hd)
+
+      #----------------------------------------------------------------
+      # Short Write Sector BER Measurement
+      #----------------------------------------------------------------
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in range(len(TestTracks[sHd])):
+            if SectorCount[sHd][trk] == 0:
+               continue
+            sptCmds.sendDiagCmd("S%X,%X" %(TestTracks[sHd][trk], hd), timeout = 500, printResult = debug, stopOnError = 0)
+            self.ShowCurrentCHS()
+            for Sector in range(0, SectorCount[sHd][trk], SectorStep):
+               self.Enable_StatsLog()
+               sptCmds.sendDiagCmd("L11,20", timeout = 500, printResult = debug, stopOnError = 0)
+               sptCmds.sendDiagCmd("Q%X" % (Sector), timeout = 500, printResult = debug, stopOnError = 0)
+               self.Get_ApoSymBer(SymBer[sHd][trk], hd)
+
+      for hd in range(self.dut.imaxHead):
+         sHd = 'H' + str(hd)
+         for trk in range(len(TestTracks[sHd])):
+            objMsg.printMsg("H[%d] T[%d] \tTotal APO DataPoints: %d" % (hd, TestTracks[sHd][trk], len(SymBer[sHd][trk])))
+
+   #-------------------------------------------------------------------------------------------------------
+   def Write_CheckError(self, PrintResults = False):
+      import sptCmds
+      #data = sptCmds.sendDiagCmd("W", printResult = PrintResults, timeout = 500, stopOnError = 0)
+      data = sptCmds.sendDiagCmd("W", timeout = 500, stopOnError = 0)
+      offset = data.find('R/W Error ')
+      if offset >= 0:
+         ErrorCode = data[offset+10:offset+18]
+         objMsg.printMsg("Script Captured EC:%s" % (ErrorCode))
+         #if ErrorCode == "C4090081":
+         return 1
+      else:
+         return 0
+
+   #-------------------------------------------------------------------------------------------------------
+   def Read_CheckError(self, PrintResults = False):
+      import sptCmds
+      #data = oSerial.sendDiagCmd("R", printResult = PrintResults, timeout = 500, stopOnError = 0)
+      data = sptCmds.sendDiagCmd("R", timeout = 500, stopOnError = 0)
+      offset = data.find('R/W Error ')
+      if offset >= 0:
+         ErrorCode = data[offset+10:offset+18]
+         objMsg.printMsg("Script Captured EC:%s" % (ErrorCode))
+         #if ErrorCode == "C4090081":
+         return 1
+      else:
+         return 0
+
+   #-------------------------------------------------------------------------------------------------------
+   def ShowCurrentCHS(self):
+      import sptCmds
+      data = sptCmds.execOnlineCmd(DOT, timeout = 20, waitLoops = 100)
+      sptCmds.sendDiagCmd(CR, timeout = 500)
+      objMsg.printMsg("%s" % (data))
+
+   #-------------------------------------------------------------------------------------------------------
+   def Enable_StatsLog (self):
+      import sptCmds
+      data = sptCmds.execOnlineCmd(CTRL_W, timeout = 20, waitLoops = 100)
+      Stats_ON = data.find("Rd/Wr stats On")
+      if Stats_ON < 0: # Rd/Wr stats NOT ready yet.
+         #sptCmds.execOnlineCmd(CTRL_Z, timeout = 10, waitLoops = 100)
+         sptCmds.execOnlineCmd(CTRL_W, timeout = 20, waitLoops = 100)
+      sptCmds.sendDiagCmd(CR, timeout = 500)
+
+
+#----------------------------------------------------------------------------------------------------------
+class CWGC(CState):
+
+   """
+      Class made for calling method that runs preheat & WGC optimization
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      self.dut = dut
+      CState.__init__(self, dut, depList)
+
+   def run(self):
+      from RdWr import CRdWrScreen
+      oRdWr = CRdWrScreen()
+      self.oFSO = CFSO()
+      if testSwitch.virtualRun == 0:
+         try:
+            self.dut.dblData.delTable('P253_PREHEAT_ELT_CODEWORD', forceDeleteDblTable = 1)
+         except:
+            objMsg.printMsg("Fail to delete P253_PREHEAT_ELT_CODEWORD table")
+            pass
+         try:
+            self.dut.dblData.delTable('P253_WGC_ELT_CODEWORD', forceDeleteDblTable = 1)
+         except:
+            objMsg.printMsg("Fail to delete P253_WGC_ELT_CODEWORD table")
+            pass
+
+      ## Display org target clr
+      self.oFSO.getAFHTargetClearances(spc_id =0)
+
+      ## Preheat Opi
+      try:
+          oRdWr.St(TP.prm_Preheat)
+          ## update new target preheat
+          if (testSwitch.FE_0207956_463655_AFH_ENABLE_WGC_CLR_TUNING):
+              oRdWr.St({'test_num':178, 'prm_name':[], 'CWORD1': 544})
+      except:
+          objMsg.printMsg("<<<<<<<<<<<<<<<<<<<<<<<<< Preheat Opti test Failed !!!   >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+          pass
+
+      ## WGC Opi
+      try:
+          oRdWr.St(TP.prm_WGC)
+          ## reset back Target Write Clearance
+          objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+          if (testSwitch.FE_0207956_463655_AFH_ENABLE_WGC_CLR_TUNING):
+              self.setWGCClr()
+      except:
+          objMsg.printMsg("<<<<<<<<<<<<<<<<<<<<<<<<<      WGC test Failed !!!   >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+          pass
+
+      ## Display new target clr
+      objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1) ## later can remove this line
+      self.oFSO.getAFHTargetClearances(spc_id =0)
+
+      ## Display new target WGC
+      oRdWr.St( {'test_num':172,'C_ARRAY1': [0, 31, 0, 0, 0, 0, 0, 0, 0, 0], 'timeout': 600, 'spc_id': 1, 'CWORD1': 33, 'prm_name': 'display_WGC'})
+      objMsg.printMsg("<<<<<<<<<<<<<<<<<<<<<<<<<                 End                     >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
+   def setWGCClr(self,):
+       from RdWr import CRdWrScreen
+       oRdWr = CRdWrScreen()
+
+       setPrm = {}
+       setPrm.update(TP.afhTargetWGC_by_zone)
+       setPrm1 = {}
+       setPrm1.update(TP.afhDeclineStepWGC_by_zone)
+       setPrm2 = {}
+       setPrm2.update(TP.afhDeclineCntWGC_by_zone)
+
+       tableName = 'P253_WGC_ELT_CODEWORD'
+       ##WGCcnt = 'CW_CNT'
+       trgWGC = 'TRG_CLR'
+       wgc_table = self.dut.dblData.Tables(tableName).chopDbLog('SPC_ID', 'match',str(1))
+
+       for i in xrange(len(wgc_table)):
+          iHead   = int(wgc_table[i]['HD_PHYS_PSN'])
+          iDataZone  = int(wgc_table[i]['DATA_ZONE'])
+          iWGCtargetclr = int(wgc_table[i][trgWGC])
+          ##iWGCcnt = int(wgc_table[i][WGCcnt])
+
+          ## init WGC decline count and WGC step
+          setPrm1["BIT_MASK"] = Utility.CUtility().ReturnTestCylWord(2**iDataZone)
+          setPrm1["HEAD_RANGE"] = ( 1 << iHead )
+          setPrm1["C_ARRAY1"][9] = TP.DeclineStepWGC_by_zone[iDataZone]
+          setPrm2["BIT_MASK"] = Utility.CUtility().ReturnTestCylWord(2**iDataZone)
+          setPrm2["HEAD_RANGE"] = ( 1 << iHead )
+          setPrm2["C_ARRAY1"][9] = TP.DeclineCntWGC_by_zone[iDataZone]
+          oRdWr.St(setPrm1)
+          oRdWr.St(setPrm2)
+
+          if iWGCtargetclr:
+              ## update WGC clr
+              setPrm["BIT_MASK"] = Utility.CUtility().ReturnTestCylWord(2**iDataZone)
+              setPrm["HEAD_RANGE"] = ( 1 << iHead )
+              setPrm["C_ARRAY1"][9] = iWGCtargetclr
+              oRdWr.St(setPrm)
+
+       oRdWr.St({'test_num':178, 'prm_name':[], 'CWORD1': 544})
+
+#----------------------------------------------------------------------------------------------------------
+class CWriteZoutOpti(CState):
+   """
+      write Zout Opti
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      self.dut = dut
+      depList = []
+      CState.__init__(self, dut, depList)
+
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      #if testSwitch.WRITE_ZOUT_OPTI:
+      from MathLib import stDev_standard, mean
+      try:
+         oProcess = CProcess()
+         from MathLib import stDev_standard, mean
+         self.oUtil = Utility.CUtility()
+         if self.dut.PREAMP_TYPE in ['LSI5231','LSI5830']:
+            ZoutList = range(2**2)
+            lookUpTbl = [55,50,45,40]
+         elif self.dut.PREAMP_TYPE in ['TI7550','TI7551']:
+            ZoutList = range(2**3)
+            lookUpTbl = [36.3,38,40,42,44.6,47.2,50.3,53.7]
+         else:
+            objMsg.printMsg('Write Zout Opti does not support UNKNOWN preamp: %s' % self.dut.PREAMP_TYPE)
+
+         #zn_list = [0,32,59]
+         zn_list = [32]
+         loops = 1
+         #mode = 'BCI'
+         mode = 'BER'
+         SetFailSafe()
+         # 1. record current Zout
+         oProcess.St(TP.WrtZoutPrm_11['read'])
+         WrtZoutOrgi = int(self.dut.dblData.Tables('P011_SV_RAM_RD_BY_OFFSET').tableDataObj()[-1]['READ_DATA'],16)
+         WrtZoutOrgi = WrtZoutOrgi&(~TP.WrtZoutPrm_11['wrt_lsi']['MASK_VALUE']&0xFFFF)
+
+         # 2. get ber data base for each Zout # Use T250 to collect data
+         if testSwitch.FE_SGP_OPTIZAP_ADDED:
+            oSrvOpti = CServoOpti()
+            if testSwitch.ENABLE_T175_ZAP_CONTROL:
+               oSrvOpti.St(TP.zapPrm_175_zapOn)
+            else:
+               oSrvOpti.St(TP.setZapOnPrm_011)
+               if not testSwitch.BF_0119055_231166_USE_SVO_CMD_ZAP_CTRL:
+                  oSrvOpti.St({'test_num':178, 'prm_name':'Save SAP in RAM to FLASH', 'CWORD1':0x420})
+         if mode == 'BCI':
+            BCI_summary = [[[0] * len(zn_list) for i in range(self.dut.imaxHead)] for j in range(len(ZoutList))]
+            for ZoutIdx in ZoutList:
+               self.updateWriteZout(ZoutIdx)
+               for hd in xrange(self.dut.imaxHead):
+                  headRange = (hd<<8) + hd
+                  ii = 0
+                  zone_mask = 0
+                  for zone in zn_list:
+                     zone_mask |= (1<<zone)
+                     BCI_ERROR_T250 = TP.prm_PrePostOptiAudit_250.copy()
+                     BCI_ERROR_T250['ZONE_MASK'] = self.oUtil.ReturnTestCylWord(zone_mask & 0xFFFFFFF)
+                     BCI_ERROR_T250['ZONE_MASK_EXT'] = self.oUtil.ReturnTestCylWord(zone_mask >> 32 & 0xFFFFFFF)
+                     BCI_ERROR_T250['TEST_HEAD'] = headRange
+                     BCI_ERROR_T250['NUM_TRACKS_PER_ZONE'] = 1
+                     BCI_ERROR_T250['MAX_ERR_RATE'] = 0xFFBA
+                     BCI_ERROR_T250['CWORD2'] = BCI_ERROR_T250['CWORD2']|0x0020
+                     BCI_ERROR_T250['CWORD1'] = BCI_ERROR_T250['CWORD1']&0xF3FD
+                     testTrk = 0
+
+                     BCI_data_by_zn = {}
+                     for index in range(loops):
+                        BCI_ERROR_T250['spc_id'] = hd*1000 + zone*10 + index
+                        oProcess.St(BCI_ERROR_T250)
+
+                        BCI_table = self.dut.dblData.Tables('P211_BCI_ERROR').chopDbLog('SPC_ID', 'match', str(BCI_ERROR_T250['spc_id']))
+                        BCI_data = [0] * self.dut.servoWedges*2
+                        for entry in BCI_table:
+                           iHead = int(entry.get('HD_PHYS_PSN'))
+                           testTrk = int(entry.get('LGC_TRK_NUM'))
+                           CW_NUM = int(entry.get('CW_NUM'))
+                           BITSERR = int(entry.get('BITSERR'))
+                           if CW_NUM >= self.dut.servoWedges*2:
+                              break
+                           else: 
+                              BCI_data[CW_NUM] = BITSERR
+                        BCI_data_by_zn[index] = BCI_data
+                     BCI_sum = [0]* self.dut.servoWedges*2
+                     for cw_idx in xrange(self.dut.servoWedges*2):
+                        for i in xrange(loops):
+                           BCI_sum[cw_idx] += BCI_data_by_zn[i][cw_idx]
+                     BCI_avg = [x/loops for x in BCI_sum]
+                     BCI_summary[ZoutIdx][hd][ii] = mean(BCI_avg)
+                     ii = ii + 1
+            # make decision
+            objMsg.printMsg("BCI: %s "% BCI_summary)
+            bestZout = 0
+            BitsErr = 999999
+            for ZoutIdx in ZoutList:
+               meanHd = 0
+               for hd in xrange(self.dut.imaxHead):
+                  meanHd = meanHd + sum(BCI_summary[ZoutIdx][hd])
+               if meanHd < BitsErr:
+                  bestZout = ZoutIdx
+                  BitsErr = meanHd
+            objMsg.printMsg("default WrtZout: %d = %4.3f ohm " % (WrtZoutOrgi, lookUpTbl[WrtZoutOrgi]))
+            objMsg.printMsg("best WrtZout: %d = %4.3f ohm " % (bestZout,lookUpTbl[bestZout] ))
+
+            def_equ_best = 0
+            if WrtZoutOrgi == bestZout:
+               def_equ_best = 1
+            self.dut.dblData.Tables('ADZ_SUMARRY').deleteIndexRecords(1)
+            self.dut.dblData.delTable('ADZ_SUMARRY')
+            self.dut.dblData.Tables('ADZ_SUMARRY').addRecord({
+               'SPC_ID'                      : 1,
+               'OCCURRENCE'                  : self.dut.objSeq.getOccurrence(),
+               'SEQ'                         : self.dut.objSeq.curSeq,
+               'TEST_SEQ_EVENT'              : self.dut.objSeq.getTestSeqEvent(0),
+               'DEF_ZOUT'                    : WrtZoutOrgi,
+               'DEF_ZOUT_OHM'                : lookUpTbl[WrtZoutOrgi],
+               'BEST_ZOUT'                   : bestZout,
+               'BEST_ZOUT_OHM'               : lookUpTbl[bestZout],
+               'DEF_EQU_BEST'                : def_equ_best,
+               })
+            objMsg.printDblogBin(self.dut.dblData.Tables('ADZ_SUMARRY'))
+         else:#BER mode
+            BER_summary = [[[0.0] * len(zn_list) for i in range(self.dut.imaxHead)] for j in range(len(ZoutList))]
+            for ZoutIdx in ZoutList:
+               self.updateWriteZout(ZoutIdx)
+               for hd in xrange(self.dut.imaxHead):
+                  headRange = (hd<<8) + hd
+                  ii = 0
+                  zone_mask = 0
+                  for zone in zn_list:
+                     zone_mask |= (1<<zone)
+                     BER_ERROR_T250 = TP.prm_PrePostOptiAudit_250.copy()
+                     BER_ERROR_T250['ZONE_MASK'] = self.oUtil.ReturnTestCylWord(zone_mask & 0xFFFFFFFF)
+                     BER_ERROR_T250['ZONE_MASK_EXT'] = self.oUtil.ReturnTestCylWord(zone_mask >> 32 & 0xFFFFFFFF)
+                     BER_ERROR_T250['TEST_HEAD'] = headRange
+                     testTrk = 0
+
+                     for index in range(loops):
+                        BER_ERROR_T250['spc_id'] = hd*1000 + zone*10 + index
+                        oProcess.St(BER_ERROR_T250)
+                        BER_table = self.dut.dblData.Tables('P250_ERROR_RATE_BY_ZONE').chopDbLog('SPC_ID', 'match', str(BER_ERROR_T250['spc_id']))
+                        for entry in BER_table:
+                           iHead = int(entry.get('HD_PHYS_PSN'))
+                           testTrk = int(entry.get('START_TRK_NUM'))
+                           BITSERR = float(entry.get('RAW_ERROR_RATE'))
+                           BER_summary[ZoutIdx][hd][ii] = BITSERR
+                     ii = ii + 1
+
+            # make decision
+            objMsg.printMsg("BER: %s "% BER_summary)
+            bestZout = 0
+            BitsErr = 999999.00
+            for ZoutIdx in ZoutList:
+               meanHd = 0.0
+               for hd in xrange(self.dut.imaxHead):
+                  meanHd = meanHd + sum(BER_summary[ZoutIdx][hd])
+               if meanHd < BitsErr:
+                  bestZout = ZoutIdx
+                  BitsErr = meanHd
+            objMsg.printMsg("default WrtZout: %d = %4.3f ohm " % (WrtZoutOrgi, lookUpTbl[WrtZoutOrgi]))
+            objMsg.printMsg("best WrtZout: %d = %4.3f ohm " % (bestZout,lookUpTbl[bestZout] ))
+
+            def_equ_best = 0
+            if WrtZoutOrgi == bestZout:
+               def_equ_best = 1
+            self.dut.dblData.Tables('ADZ_SUMARRY').deleteIndexRecords(1)
+            self.dut.dblData.delTable('ADZ_SUMARRY')
+            self.dut.dblData.Tables('ADZ_SUMARRY').addRecord({
+               'SPC_ID'                      : 2,
+               'OCCURRENCE'                  : self.dut.objSeq.getOccurrence(),
+               'SEQ'                         : self.dut.objSeq.curSeq,
+               'TEST_SEQ_EVENT'              : self.dut.objSeq.getTestSeqEvent(0),
+               'DEF_ZOUT'                    : WrtZoutOrgi,
+               'DEF_ZOUT_OHM'                : lookUpTbl[WrtZoutOrgi],
+               'BEST_ZOUT'                   : bestZout,
+               'BEST_ZOUT_OHM'               : lookUpTbl[bestZout],
+               'DEF_EQU_BEST'                : def_equ_best,
+               })
+            objMsg.printDblogBin(self.dut.dblData.Tables('ADZ_SUMARRY'))           
+         # load back orginal WrtZout if data collection only
+
+         self.updateWriteZout(WrtZoutOrgi)
+
+         if testSwitch.FE_SGP_OPTIZAP_ADDED:
+            oSrvOpti = CServoOpti()
+            if testSwitch.ENABLE_T175_ZAP_CONTROL:
+               oSrvOpti.St(TP.zapPrm_175_zapOff)
+            else:
+               oSrvOpti.St(TP.setZapOffPrm_011)
+               if not testSwitch.BF_0119055_231166_USE_SVO_CMD_ZAP_CTRL:
+                  oSrvOpti.St({'test_num':178, 'prm_name':'Save SAP in RAM to FLASH', 'CWORD1':0x420})
+            ClearFailSafe()
+      except:
+        objMsg.printMsg("Fail to optimize the Zout, just use default setting")
+   #-------------------------------------------------------------------------------------------------------
+   def updateWriteZout(self, Zout):
+      oProcess = CProcess()
+      tempZoutPram = TP.WrtZoutPrm_11.copy()
+      oProcess.St(tempZoutPram['read'])
+      WrtZout = int(self.dut.dblData.Tables('P011_SV_RAM_RD_BY_OFFSET').tableDataObj()[-1]['READ_DATA'],16)
+      if WrtZout&(~tempZoutPram['wrt_lsi']['MASK_VALUE']&0xFFFF) == Zout:
+         objMsg.printMsg("same write Zout already")
+      else:
+         tempZoutPram['wrt_lsi']['WR_DATA'] = Zout
+         oProcess.St(tempZoutPram['wrt_lsi'])
+         oProcess.St(tempZoutPram['saveSAP'])
+         oProcess.St(tempZoutPram['read'])
+         WrtZout = int(self.dut.dblData.Tables('P011_SV_RAM_RD_BY_OFFSET').tableDataObj()[-1]['READ_DATA'],16)
+         if WrtZout&(~tempZoutPram['wrt_lsi']['MASK_VALUE']&0xFFFF) == Zout:
+            objMsg.printMsg("write Zout is %d "% (WrtZout&(~tempZoutPram['wrt_lsi']['MASK_VALUE']&0xFFFF)))
+         else:
+            objMsg.printMsg("Failed to update write Zout")
+            raise
+
+
+#----------------------------------------------------------------------------------------------------------
+###########################################################################################################
+###########################################################################################################
+class ATE_SCREEN(CState):
+   """
+      Description: Class that will perform spt based read screens
+      Base: N/A
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      oProc = CProcess()
+      from RdWr import CRdWrScreen
+      oRdWr = CRdWrScreen()
+      from Process import CCudacom
+      self.oOudacom = CCudacom()
+      if 1 : # for karnakA only 
+          objMsg.printMsg("ATE Screen Started")
+          objMsg.printMsg("ATE Screen Setup")
+          self.ScreenSetup()
+          loop = 20
+          v1=[]  #BERCNT (VREG=7)
+          v2=[]
+          v3=[]
+          v4=[]  #BURSTCOUNT (VREG=7)
+          v5=[]  #BERCNT (VREG=4)
+          v6=[]  #BURSTCOUNT (VREG=4)
+          vgar1=[]
+          TsymE=[]
+          TsymS=[]
+    
+          objMsg.printMsg("Adapt NPML")
+             ## Adapt NPML
+          self.oOudacom.Fn(1269,0x0A16,0x004A)          # 0x4A TAPCGUG=BIASGUG=0, NPTRAN_OFF=0
+          self.oOudacom.Fn(1269,0x0A1A,0x2110)          # 0x2110 TAPC0GUG=0    
+          for r in range(200):
+              self.oOudacom.Fn(1269,0x11F8,0x0020)         # Reserved bit to fake channel into thinking SGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # servo event ends
+              self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults) 
+              self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults)
+              self.oOudacom.Fn(1269,0x11F8,0x0040)         # Reserved bit to fake channel into thinking RDGATE is occurring
+            ## Freeze NPML
+          objMsg.printMsg("Freeze NPML")
+          self.oOudacom.Fn(1269,0x0A16,0x0000)          # 0x4A TAPCGUG=BIASGUG=0, NPTRAN_OFF=0
+          self.oOudacom.Fn(1269,0x0A1A,0x2100)          # 0x2110 TAPC0GUG=0    
+          buf, errorCode = self.oOudacom.Fn(1269,1308, 0x110C)         # clear READCNT low
+          buf, errorCode = self.oOudacom.Fn(1269,1308, 0x110D)         #  clear READCNT high
+          self.oOudacom.Fn(1269,0x7EA,0x0078)                         # VREG=7
+          objMsg.printMsg("  VREG = 7")
+          x=loop  #loop=20
+          while x>0:
+    
+              ## clear Byte Error Monitor
+              objMsg.printMsg("    Loopcount = %d"%(20-x) )
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1108)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1109)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x110A)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x110B)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1104)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1105)
+    
+              self.oOudacom.Fn(1269,0x11F8,0x0020)         # Reserved bit to fake channel into thinking SGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # servo event ends
+              self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults)
+              self.oOudacom.Fn(1269,0x11F8,0x0040)         # Reserved bit to fake channel into thinking RDGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # READ event ends
+              buf, errorCode = self.oOudacom.Fn(1308,0x1212)         # display VGAR
+              vgar=int(binascii.hexlify(buf),16)
+              vgar=[vgar]
+              objMsg.printMsg("      VGAR = %d"%vgar[0])
+              vgar1=vgar1+vgar
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1108)         # BERCNT low
+              print binascii.hexlify(buf)
+              z=int(binascii.hexlify(buf),16)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1109)         #  BERCNT high
+              print binascii.hexlify(buf)
+              z1=int(binascii.hexlify(buf),16)
+              z1=z1*65536
+              z=z+z1
+              z=[z]
+              v1=v1+z
+              objMsg.printMsg("      BERCNT = %d"%z[0])
+              #buf, errorCode = fn(1308, 0x110A)         # BYTECNT low
+              #print binascii.hexlify(buf)
+              #b=int(binascii.hexlify(buf),16)
+              #buf, errorCode = fn(1308, 0x110B)         #  BYTECNT high
+              #print binascii.hexlify(buf)
+              #b1=int(binascii.hexlify(buf),16)
+              #b1=b1*65536
+              #b=b+b1
+              #b=[b]
+              #v2=v2+b
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1104)         # BURSTCNT low
+              print binascii.hexlify(buf)
+              b=int(binascii.hexlify(buf),16)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1105)         #  BURSTCNT high
+              #print binascii.hexlify(buf)
+              b1=int(binascii.hexlify(buf),16)
+              b1=b1*65536
+              b=b+b1
+              b=[b]
+              v4=v4+b
+              objMsg.printMsg("      BURSTCNT = %d"%b[0])
+              x=x-1
+    
+          objMsg.printMsg("  VREG = 4")
+          objMsg.printMsg("  If any loop BERCNT > 50 ,ATE fail")
+          objMsg.printMsg("  IF any loop BURSTCNT > 0 ,ATE fail")
+          self.oOudacom.Fn(1269,0x7EA,0x0048)                         # VREG=4
+          x=loop
+          failBER=0
+          failBURST=0
+          while x!=0:
+              ## clear Byte Error Monitor
+              #fn(1308, 0x1108) # try only
+              objMsg.printMsg("    Loopcount %d "% x)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1108)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1109)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x110A)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x110B)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1104)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1105)
+    
+              self.oOudacom.Fn(1269,0x11F8,0x0020)         # Reserved bit to fake channel into thinking SGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # servo event ends
+              self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults)
+              self.oOudacom.Fn(1269,0x11F8,0x0040)         # Reserved bit to fake channel into thinking RDGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # READ event ends
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1108)         # BERCNT low
+              #print binascii.hexlify(buf)
+              z=int(binascii.hexlify(buf),16)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1109)         #  BERCNT high
+              #print binascii.hexlify(buf)
+              z1=int(binascii.hexlify(buf),16)
+              z1=z1*65536
+    #          if z > 50:
+    #              failBER=1
+              z=z+z1
+              if z > 50:
+                  failBER=1
+              z=[z]
+              objMsg.printMsg( "      BERCNT = %d " % z[0])
+              v5=v5+z
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1104)         # BURSTCNT low
+              #print binascii.hexlify(buf)
+              #objMsg.printMsg( "binascii.hexlify 0x1104 0x%s " % binascii.hexlify(buf))
+              b=int(binascii.hexlify(buf),16)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x1105)         #  BURSTCNT high
+              #objMsg.printMsg( "binascii.hexlify 0x1105 0x%s " % binascii.hexlify(buf))
+              #print binascii.hexlify(buf)
+              b1=int(binascii.hexlify(buf),16)
+              b1=b1*65536
+              b=b+b1
+              if b > 0:
+                  failBURST=1
+              b=[b]
+              objMsg.printMsg( "      BURSTCNT = %d " % b[0])
+              v6=v6+b
+              x=x-1
+    
+          #buf, errorCode = fn(1308, 0x110C)         # READCNT low
+          #print binascii.hexlify(buf)
+          #b=int(binascii.hexlify(buf),16)
+          #buf, errorCode = fn(1308, 0x110D)         #  READCNT high
+          #print binascii.hexlify(buf)
+          #b1=int(binascii.hexlify(buf),16)
+          #b1=b1*65536
+          #b=b+b1
+          #b=[b]
+          #v3=v3+b
+          #print vgar1
+          #print v1
+          #print v4
+          #print "Total Bytes per sector seen by BER"
+          #print v2
+          #print "Total Sectors seen by BER"
+          #print v3
+          #objMsg.printMsg( "Errors VREG 4 %d" % int(v5) )
+          #objMsg.printMsg( "Burst Errors VREG 4 %d" % int( v6) )
+          if (failBER or failBURST) == 0:
+              objMsg.printMsg("ATE PASS")
+          else:
+              objMsg.printMsg("ATE FAIL")
+    
+          objMsg.printMsg("ATE Screen End")
+    
+          objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+          ## END #### DATA OUTPUT TESTS ONLY--- NO FAILURE
+
+   def SID_Bypass(self):
+      #global combuffer
+      #global Register
+      #global value
+      # SID Bypass
+      
+      objMsg.printMsg("SID_Bypass")
+      self.oOudacom.Fn(1269,0x410E,0xFFFF)
+      self.oOudacom.Fn(1269,0x40DF,0x00A0)
+      self.oOudacom.Fn(1269,0x40E0,0x0000)
+      self.oOudacom.Fn(1269,0x40E1,0x0000)
+      self.oOudacom.Fn(1269,0x40C0,0x0100) # SID Read Mode, 0x0101=SID Write Mode
+
+   def LoadNPMLMakara(self):
+
+      ## NPML TAPS and BIAS
+      objMsg.printMsg("LoadNPMLMakara")
+      self.oOudacom.Fn(1269,0x0816,0x6B22)
+      self.oOudacom.Fn(1269,0x0817,0x10F7)
+      self.oOudacom.Fn(1269,0x0818,0x747F)
+      self.oOudacom.Fn(1269,0x0819,0x7FFF)
+      self.oOudacom.Fn(1269,0x081A,0x77FF)
+      self.oOudacom.Fn(1269,0x081B,0x060B)    
+      self.oOudacom.Fn(1269,0x081C,0x3E3F)
+      self.oOudacom.Fn(1269,0x081D,0x0C07)
+      self.oOudacom.Fn(1269,0x081E,0x0501)
+      self.oOudacom.Fn(1269,0x081F,0x2B2C)
+      self.oOudacom.Fn(1269,0x0820,0x322F)    
+      self.oOudacom.Fn(1269,0x0821,0x3935)
+      self.oOudacom.Fn(1269,0x0822,0x2B33)
+      self.oOudacom.Fn(1269,0x0825,0xC000)    
+      self.oOudacom.Fn(1269,0x0826,0xD100)
+      self.oOudacom.Fn(1269,0x0827,0xF1E0)
+      self.oOudacom.Fn(1269,0x0828,0xF100)
+      self.oOudacom.Fn(1269,0x0829,0xF001)
+      self.oOudacom.Fn(1269,0x082A,0xF11F)    
+      self.oOudacom.Fn(1269,0x082B,0xF00F)
+      self.oOudacom.Fn(1269,0x082C,0xF0F0)
+      self.oOudacom.Fn(1269,0x082D,0xF000)
+
+   def LoadNPMLCraw(self):
+
+      ## NPML TAPS and BIAS
+      objMsg.printMsg("LoadNPMLCraw")
+      self.oOudacom.Fn(1269,0x0816,0x7CE4)
+      self.oOudacom.Fn(1269,0x0817,0x1E71)
+      self.oOudacom.Fn(1269,0x0818,0x183F)
+      self.oOudacom.Fn(1269,0x0819,0x7FFF)
+      self.oOudacom.Fn(1269,0x081A,0x73FF)
+      self.oOudacom.Fn(1269,0x081B,0x0914)    
+      self.oOudacom.Fn(1269,0x081C,0x240E)
+      self.oOudacom.Fn(1269,0x081D,0x0535)
+      self.oOudacom.Fn(1269,0x081E,0x1501)
+      self.oOudacom.Fn(1269,0x081F,0x262E)
+      self.oOudacom.Fn(1269,0x0820,0x0C01)    
+      self.oOudacom.Fn(1269,0x0821,0x2F23)
+      self.oOudacom.Fn(1269,0x0822,0x3F35)
+      self.oOudacom.Fn(1269,0x0825,0xC000)    
+      self.oOudacom.Fn(1269,0x0826,0xAF0F)
+      self.oOudacom.Fn(1269,0x0827,0xD370)
+      self.oOudacom.Fn(1269,0x0828,0xC5BE)
+      self.oOudacom.Fn(1269,0x0829,0xF251)
+      self.oOudacom.Fn(1269,0x082A,0xAD0F)    
+      self.oOudacom.Fn(1269,0x082B,0xE525)
+      self.oOudacom.Fn(1269,0x082C,0xAE80)
+      self.oOudacom.Fn(1269,0x082D,0xEF30)
+
+   def ScreenSetup(self):
+          
+      self.oOudacom.Fn(1308, 0x0)        # this is here to spin up the drive and load the overlays
+      time.sleep(30)  # wait 30 sec
+      st([2])         # spin down
+      time.sleep(30)  # wait 30 sec
+      self.SID_Bypass()
+      objMsg.printMsg("Channel Reg Setup")
+      self.oOudacom.servocmd(0x66f,0x253,0x1) # enable testm
+      self.oOudacom.Fn(1269,0x1342,0x0E00)        # set up test points CE6 = servom, e00 = NRZ0, 12B7=sync
+      self.oOudacom.Fn(1269,0x1343,0x12b7)                 # cc3=ReadM
+
+      self.oOudacom.Fn(1269,0x163E,0x0014)         # Enable ATOP/ATON CTF output, 0x1F=enable VIEWDAC
+      self.oOudacom.Fn(1269,0x1340,0x000E)         # VGAR on VIEWDAC
+      self.oOudacom.Fn(1269,0x0834,0x05C8)          # Set TARG values 
+      self.oOudacom.Fn(1269,0x166E,0x0081)        # Make sure WP_TRIM is set
+      self.oOudacom.Fn(1269,0x080A,0x0050)         # ACCR = 0x50
+      self.oOudacom.Fn(1269,0x1224,0x81F9)         # RD_LEN_ACC1=0,RD_LEN_ACC2=6,RD_LEN_ACC3=1,RD_DC_REC=0,GAPREC_IDL=0,GAPR_PEDGE=0
+      self.oOudacom.Fn(1269,0x129F,0x0000)         # SV_DC_REC, SV_LEN_ACC1, SV_LEN_ACC2, SV_LEN_ACC3
+  #***************  tune ************************
+      self.oOudacom.Fn(1269,0x122C,0x0000)         # DCTAPR=0x
+      self.oOudacom.Fn(1269,0x0833,0x0100)          # VGARSH = 0x100 centered
+      self.oOudacom.Fn(1269,0x080B,0x0300)          # ATT2R [13:12], ATTC_RD [10:8], ACCR_PERP = 0
+      self.oOudacom.Fn(1269,0x160F,0x0006)            # CTFHGR=2
+  #***************  tune ************************
+      self.oOudacom.servocmd(0x66f,0x00C8,0x0000)         # FREQ_OFF=0
+      self.oOudacom.servocmd(0x66f,0x0164,0x0000)         # FSYNG=0
+      self.oOudacom.servocmd(0x66f,0x018E,0x0000)          # SWFREQ=0
+      self.oOudacom.servocmd(0x66f,0x00AD,0x0001)           # CTFAUTO=1
+      self.oOudacom.Fn(1269,0x1214,0x0000)                  # SHADOWR=0; 0x0040 = 0
+      self.oOudacom.Fn(1269,0x1210,0x5000)         # GUGR=0GUGACQR=5 (5200;GUGACQR=5,GUGR=2)
+      self.oOudacom.Fn(1269,0x1233,0x0008)         # READSTRT=8
+      self.oOudacom.Fn(1269,0x1211,0x0000)         # GUGPACQ = 0 , AGRR=0
+      self.oOudacom.Fn(1269,0x1235,0x0622)         # DCSTRT=0, DCUGR=2, SCUGACR=2, DCUGACR=2
+      self.oOudacom.servocmd(0x66f,0x014E,0x0000) #DCSTRTS=0
+      self.oOudacom.servocmd(0x66f,0x0158,0x0000) #DCUGS=0
+      self.oOudacom.servocmd(0x66f,0x0159,0x0000) #DCUGACS=0,DCUGAVGS=0
+      self.oOudacom.Fn(1269,0x129c,0x0000)         # ZGS_ENR=0 (disable)
+      self.oOudacom.Fn(1269,0x0804,0x0F5C)          # MDIVR = 0x0f5c=479.98 MHz
+      self.oOudacom.servocmd(0x66f,0x00BC,0x0F5C) # MDIVS=0x0F5C
+      self.oOudacom.Fn(1269,0x0808,0x03C0)         # CTFFR = 0x3c0
+      self.oOudacom.servocmd(0x66f,0x00AA,0x03C0) # CTFFS=CTFFR
+      self.oOudacom.Fn(1269,0x0809,0x0114)          # ZFR=0x14
+      self.oOudacom.Fn(1269,0x1010,0x0003)         # ADG_MODE=3
+      self.oOudacom.Fn(1269,0x1012,0x6969)         # ADG_DATA
+      self.oOudacom.Fn(1269,0x1013,0x6969)         # ADG_DATA_HI 
+      self.oOudacom.Fn(1269,0x10C0,0x3F01)         # BIM_MODE = 0x1
+      self.oOudacom.Fn(1269,0x1020,0x0011)         # LLI_GATE_MD=1 IG1_Q_BYP=1
+      self.oOudacom.Fn(1269,0x11F6,0x0002)         # ASYNC_GATES=1
+      self.oOudacom.Fn(1269,0x0836,0x0032)          # PREA_SIZE = 32
+      self.oOudacom.Fn(1269,0x102E,0x019A)         # DATA_SIZE = 0x019A
+      self.oOudacom.Fn(1269,0x1005,0x019A)         # Sectors = 0x019A
+      self.oOudacom.Fn(1269,0x1230,0x0000)         # TWUG=0x0 NYUGR=0 NLUGR = 0
+      self.oOudacom.Fn(1269,0x0814,0x0100)         # NLTAPR=0x0, NYTAPR=1, EMMA_B (FLORENSA 0x807)
+      self.oOudacom.Fn(1269,0x0806,0x0000)         # DFIRSCALE=0
+      #LoadNPMLCraw ()
+      self.LoadNPMLMakara()
+
+      ## FIR
+      self.oOudacom.Fn(1269,0x080C,0x0000)          # TAPW1R = 0xA TAPW2R=3
+      self.oOudacom.Fn(1269,0x080D,0xff00)          # TAPW3R=5 TAPW4R=1
+      self.oOudacom.Fn(1269,0x080E,0xfbff)          # TAP5&6=0
+      self.oOudacom.Fn(1269,0x080F,0x0032)          # TAP 7&8 = 0
+      self.oOudacom.Fn(1269,0x0810,0x0832)          # TAP 9&x = 0
+      self.oOudacom.Fn(1269,0x0811,0x0001)          # TAP 11&12 = 0
+      self.oOudacom.Fn(1269,0x0812,0x0000)          # TAP 13&14 = 0
+      self.oOudacom.Fn(1269,0x0813,0x00ff)          # TAP 15&16 = 0
+      self.oOudacom.Fn(1269,0x0835,0x0000)          # TDTARG=0
+      ##
+      self.oOudacom.Fn(1269,0x0A16,0x0000)          # 0x4A TAPCGUG=BIASGUG=0, NPTRAN_OFF=0
+      self.oOudacom.Fn(1269,0x0A1A,0x2100)          # 0x2110 TAPC0GUG=0    
+      self.oOudacom.Fn(1269,0x120A,0xC000)         #SIG_POL=0 
+      self.oOudacom.Fn(1269,0x161C,0x0000)         #WRITEINV=0
+      self.oOudacom.Fn(1269,0x0A22,0x0000)          # SMWINDOW = 0 
+      self.oOudacom.Fn(1269,0x0815,0x40C8)          # ECWIN=4 SMTHRSH
+      self.oOudacom.Fn(1269,0x1002,0x0008)         # WRTCKINT=1  ?????????????????????????
+      self.oOudacom.Fn(1269,0x121E,0x0079)         # ACQLENR = 7,ZPSLENR=2
+      self.oOudacom.Fn(1269,0x10C7,0x0000)         # BIM_STRT=0
+      self.oOudacom.Fn(1269,0x10C6,0x0000)         # BIM_STOP
+      self.oOudacom.Fn(1269,0x1616,0x0000)         # PDBOWR=0 PD_WPC=0
+      self.oOudacom.Fn(1269,0x161F,0x7000)         # DRVTXOE=1
+      self.oOudacom.Fn(1269,0x1004,0x000C)         # RWBI=1,ENPARITY=1
+      self.oOudacom.Fn(1269,0x160B,0x0000)         # WP_DIS=0
+                                 # 
+      self.oOudacom.Fn(1269,0x0800,0x3000)          # LATE0F=48, LATE1F=48
+      self.oOudacom.Fn(1269,0x0803,0x3020)          # LATE2R=2, NOMR=48
+      self.oOudacom.Fn(1269,0x0801,0x3020)          # LATE2F=3f - NOMF=30
+      self.oOudacom.Fn(1269,0x0802,0x3000)          # LATE1R=40, LATE0R=48
+                                  # 
+      self.oOudacom.Fn(1269,0x0A12,0x4000)          # P5_INTERATION=1
+      self.oOudacom.servocmd(0x66f,0x00A2,0x0004) # ACCS=0, ATTC=4
+      self.oOudacom.servocmd(0x66f,0x014A,0x0000) # ZGS_ENS=0
+      self.oOudacom.servocmd(0x66f,0x0156,0x0000) # GUGS=GUGACQS=0
+      self.oOudacom.servocmd(0x66f,0x0160,0x0000) # SRVSQLCH=15,SRVDC_LONG=0
+      self.oOudacom.Fn(1269,0x1014,0xFFFF)            # ADG_SEED lsb = 0xFFFF
+      self.oOudacom.Fn(1269,0x1236,0x2110)            # QMREAD=1,QMRESET=0,QM_MODE=1,QMSTART=1,QMOVER=0
+      self.oOudacom.Fn(1269,0x1100,0xF063)            # BERMODE=6, BER_EFI=3, BER_MBL=15
+      self.oOudacom.Fn(1269,0x1101,0x0280)            # BEM_ACC=1, BER32=1
+      self.oOudacom.Fn(1269,0x121D,0x0C49)            # FUGR=1,FUGPAR=1,FUGACQR=1,ZOS_ENR=0,ZOSGADJR=0
+      self.oOudacom.Fn(1269,0x121C,0x30DB)            # PHUGR=3,PHUGPAR=3,PHUGACQR=3
+
+
+      self.oOudacom.Fn(1216,0x08F0,0x4000,16,1,0x07B6) # disable SGATE from TYCO
+
+      self.oOudacom.Fn(1269,0x100A,0x0004)         # LOOPBACK=1
+      self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults)
+      self.oOudacom.Fn(1269,0x1033,0x0008)         # LAST_SPLT = 1
+
+#----------------------------------------------------------------------------------------------------------
+class ATE_SCREEN_PLUS(CState):
+   """
+      Description: Class that will perform WPC screening script on KPlus
+      Base: N/A
+   """
+   #-------------------------------------------------------------------------------------------------------
+   def __init__(self, dut, params={}):
+      self.params = params
+      depList = []
+      CState.__init__(self, dut, depList)
+   #-------------------------------------------------------------------------------------------------------
+   def run(self):
+      oProc = CProcess()
+      from RdWr import CRdWrScreen
+      oRdWr = CRdWrScreen()
+      from Process import CCudacom
+      self.oOudacom = CCudacom()
+      if 1 : # for karnakPlus only (check it before call this class)
+          objMsg.printMsg("ATE Screen Started")
+          objMsg.printMsg("ATE Screen Setup")
+          retry_setup = 0
+          while True:
+            try:  
+               self.ScreenSetup()
+               break
+            except:
+               retry_setup = retry_setup + 1
+               objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+               if retry_setup>5: raise
+          loop = 20
+          v1=[]  #BERCNT (VREG=7)
+          v2=[]
+          v3=[]
+          v4=[]  #BURSTCOUNT (VREG=7)
+          v5=[]  #BERCNT (VREG=4)
+          v6=[]  #BURSTCOUNT (VREG=4)
+          vgar1=[]
+    
+          objMsg.printMsg("Adapt NPML")
+          ## Perform 20 training loops toggling internal SG, RG, adapting NPML and VGAR during Acquire
+          self.oOudacom.Fn(1269,0x0A16,0x004A)          # 0x4A TAPCGUG=BIASGUG=0, NPTRAN_OFF=0
+          self.oOudacom.Fn(1269,0x0A1A,0x0010)          # 0x0010 TAPC0GUG=0    
+          self.oOudacom.Fn(1269,0x0A46,0x0703)          # BENP_BIASGUG = 3 BENP_TAPCOGUG =3 BENP_TAPCGUG =2   
+
+          for r in range(20):
+              self.oOudacom.Fn(1269,0x11F8,0x0020)         # Reserved bit to fake channel into thinking SGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # servo event ends
+              self.oOudacom.Fn(1269,0x0880,0x0005)         # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults) 
+              self.oOudacom.Fn(1269,0x11F8,0x0040)         # Reserved bit to fake channel into thinking RDGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # Reserved bit to fake channel into thinking RDGATE is occurring
+          ## Freeze NPML
+          objMsg.printMsg("Freeze NPML")
+          self.oOudacom.Fn(1269,0x0A16,0x0002)          # 0x4A TAPCGUG=BIASGUG=0, NPTRAN_OFF=0
+          self.oOudacom.Fn(1269,0x0A1A,0x0000)          # 0x0000 TAPC0GUG=0   
+          self.oOudacom.Fn(1269,0x0A46,0x0000)          # 
+
+          ## Perform 10 reads and determine pass/fail for each voltage regulator setting (7 and 4)
+          buf, errorCode = self.oOudacom.Fn(1269,1308, 0x110C)         # clear READCNT low
+          buf, errorCode = self.oOudacom.Fn(1269,1308, 0x110D)         #  clear READCNT high
+          self.oOudacom.Fn(1269,0x7EA,0x0078)                         # VREG=7
+          objMsg.printMsg("  VREG = 7")
+          x=loop  #loop=20
+          failBER=0
+          failBURST=0
+          while x>0:
+              ## clear Byte Error Monitor
+              objMsg.printMsg("    Loopcount = %d"%(20-x) )
+              buf, errorCode = self.oOudacom.Fn(1308, 0x10D8)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x10D9)
+    
+              self.oOudacom.Fn(1269,0x11F8,0x0020)         # Reserved bit to fake channel into thinking SGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # servo event ends
+              self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults)
+              self.oOudacom.Fn(1269,0x11F8,0x0040)         # Reserved bit to fake channel into thinking RDGATE is occurring
+              self.oOudacom.Fn(1269,0x11F8,0x0000)         # READ event ends
+              buf, errorCode = self.oOudacom.Fn(1308,0x1212)         # display VGAR
+              vgar=int(binascii.hexlify(buf),16)
+              vgar=[vgar]
+              objMsg.printMsg("      VGAR = %d"%vgar[0])
+              vgar1=vgar1+vgar
+              buf, errorCode = self.oOudacom.Fn(1308, 0x10D8)         # BERCNT low
+              print binascii.hexlify(buf)
+              z=int(binascii.hexlify(buf),16)
+              buf, errorCode = self.oOudacom.Fn(1308, 0x10D9)         #  BERCNT high
+              print binascii.hexlify(buf)
+              z1=int(binascii.hexlify(buf),16)
+              z1=z1*65536
+              z=z+z1
+              if z > 50:
+                 failBER = 1
+              z=[z]
+              v1=v1+z
+              objMsg.printMsg("      BERCNT = %d"%z[0])
+              x=x-1
+    
+          objMsg.printMsg("  VREG = 4")
+          objMsg.printMsg("  If any loop BERCNT > 50 ,ATE fail")
+
+          if failBER == 0:
+              objMsg.printMsg("ATE PASS")
+          else:
+              objMsg.printMsg("ATE FAIL")
+    
+          objMsg.printMsg("ATE Screen End")
+    
+          objPwrCtrl.powerCycle(set5V=5000, set12V=12000, offTime=10, onTime=10, useESlip=1)
+          ## END #### DATA OUTPUT TESTS ONLY--- NO FAILURE
+
+   def SID_Bypass(self):
+      #global combuffer
+      #global Register
+      #global value
+      # SID Bypass
+      
+      objMsg.printMsg("SID_Bypass")
+      self.oOudacom.Fn(1269,0x410E,0xFFFF)
+      self.oOudacom.Fn(1269,0x40DF,0x00A0)
+      self.oOudacom.Fn(1269,0x40E0,0x0000)
+      self.oOudacom.Fn(1269,0x40E1,0x0000)
+      self.oOudacom.Fn(1269,0x40C0,0x0100) # SID Read Mode, 0x0101=SID Write Mode
+
+   def LoadNPML(self):
+      ## NPML TAPS and BIAS
+      objMsg.printMsg("LoadNPML")
+      self.oOudacom.Fn(1269,0x0816,0x6F5A)
+      self.oOudacom.Fn(1269,0x0817,0x6F79)
+      self.oOudacom.Fn(1269,0x0818,0x7BDF)
+      self.oOudacom.Fn(1269,0x0819,0x7FFF)
+      self.oOudacom.Fn(1269,0x081A,0x77FF)
+      self.oOudacom.Fn(1269,0x081B,0x3E02)    
+      self.oOudacom.Fn(1269,0x081C,0x0401)
+      self.oOudacom.Fn(1269,0x081D,0x3F06)
+      self.oOudacom.Fn(1269,0x081E,0x3E3C)
+      self.oOudacom.Fn(1269,0x081F,0x302C)
+      self.oOudacom.Fn(1269,0x0820,0x2F2E)    
+      self.oOudacom.Fn(1269,0x0821,0x302A)
+      self.oOudacom.Fn(1269,0x0822,0x2E31)
+      self.oOudacom.Fn(1269,0x0823,0x001F)    
+      self.oOudacom.Fn(1269,0x0826,0x01E0)
+      self.oOudacom.Fn(1269,0x0827,0xCEDC)
+      self.oOudacom.Fn(1269,0x0828,0xF201)
+      self.oOudacom.Fn(1269,0x0829,0xE00F)
+      self.oOudacom.Fn(1269,0x082A,0x0FE0)    
+      self.oOudacom.Fn(1269,0x082B,0xC0CF)
+      self.oOudacom.Fn(1269,0x082C,0x2002)
+      self.oOudacom.Fn(1269,0x082D,0xE0EF)
+
+   def LoadBackEndNPML(self):
+      ## BackEnd NPML TAPS and BIAS
+      objMsg.printMsg("LoadBackEndNPML")
+      self.oOudacom.Fn(1269,0x0900,0x16FE)
+      self.oOudacom.Fn(1269,0x0901,0x1C00)
+      self.oOudacom.Fn(1269,0x0902,0x16D7)
+      self.oOudacom.Fn(1269,0x0903,0x1D84)
+      self.oOudacom.Fn(1269,0x0904,0x10FC)
+      self.oOudacom.Fn(1269,0x0905,0x199B)
+      self.oOudacom.Fn(1269,0x0906,0x177D)
+      self.oOudacom.Fn(1269,0x0907,0x1B08)
+      self.oOudacom.Fn(1269,0x0908,0x1676)
+      self.oOudacom.Fn(1269,0x0909,0x1A14)
+      self.oOudacom.Fn(1269,0x090A,0x1376)
+      self.oOudacom.Fn(1269,0x090B,0x189D)
+      self.oOudacom.Fn(1269,0x090B,0x163A)
+      self.oOudacom.Fn(1269,0x090D,0x1B8A)
+      self.oOudacom.Fn(1269,0x090E,0x16FE)
+      self.oOudacom.Fn(1269,0x090F,0x1989)
+      self.oOudacom.Fn(1269,0x0924,0x0000)
+      self.oOudacom.Fn(1269,0x0925,0x0780)
+      self.oOudacom.Fn(1269,0x0926,0x0B9C)
+      self.oOudacom.Fn(1269,0x0927,0x7821)
+      self.oOudacom.Fn(1269,0x0928,0x785F)
+      self.oOudacom.Fn(1269,0x0929,0x001E)
+      self.oOudacom.Fn(1269,0x092A,0x03FC)
+      self.oOudacom.Fn(1269,0x092B,0x6FDC)
+      self.oOudacom.Fn(1269,0x092C,0x7441)
+      self.oOudacom.Fn(1269,0x092D,0x7FC1)
+      self.oOudacom.Fn(1269,0x092E,0x03DE)
+
+   def LoadLoopFIR(self):
+      ## FIR
+      objMsg.printMsg("LoadLoopFIR")
+      self.oOudacom.Fn(1269,0x080C,0x0000)  # TAPW1R TAPW2R
+      self.oOudacom.Fn(1269,0x080D,0x0000)  # TAPW3R TAPW4R
+      self.oOudacom.Fn(1269,0x080E,0x0000)  # TAP5 TAP6
+      self.oOudacom.Fn(1269,0x080F,0x0014)  # TAP7 TAP8
+      self.oOudacom.Fn(1269,0x0810,0x0014)  # TAP9 TAP10
+      self.oOudacom.Fn(1269,0x0811,0x0000)  # TAP11 TAP12
+      self.oOudacom.Fn(1269,0x0812,0x0000)  # TAP13 TAP14
+      self.oOudacom.Fn(1269,0x0813,0x0000)  # TAP15 TAP16
+      self.oOudacom.Fn(1269,0x0814,0x0000)  # TNLTAPR BYTAPR
+      self.oOudacom.Fn(1269,0x0835,0x0000)  # TDTARG = 0
+      self.oOudacom.Fn(1269,0x0806,0x6000)  # DFIRSCALE = 0
+
+   def LoadBackEndFIR(self):
+      ## FIR
+      objMsg.printMsg("LoadBackEndFIR")
+      self.oOudacom.Fn(1269,0x0A00,0xFF00)  # TAPW1R TAPW2R
+      self.oOudacom.Fn(1269,0x0A01,0xFF00)  # TAPW3R TAPW4R
+      self.oOudacom.Fn(1269,0x0A02,0xF900)  # TAP5 TAP6
+      self.oOudacom.Fn(1269,0x0A03,0x002D)  # TAP7
+      self.oOudacom.Fn(1269,0x0A70,0x052D)  # TAP8
+      self.oOudacom.Fn(1269,0x0A03,0x0100)  # TAP9
+      self.oOudacom.Fn(1269,0x0A04,0x0000)  # TAP10 TAP11
+      self.oOudacom.Fn(1269,0x0A05,0x0000)  # TAP12 TAP13
+      self.oOudacom.Fn(1269,0x0A06,0x0000)  # TAP14
+      self.oOudacom.Fn(1269,0x0A07,0x0000)  # TAP15 TAP16
+      self.oOudacom.Fn(1269,0x0A0C,0x0000)  # DFIRSCALE = 0
+
+   def ScreenSetup(self):
+          
+      self.oOudacom.Fn(1308, 0x0)        # this is here to spin up the drive and load the overlays
+      time.sleep(30)  # wait 30 sec
+      st([2])         # spin down
+      time.sleep(30)  # wait 30 sec
+      self.SID_Bypass()
+      objMsg.printMsg("Channel Reg Setup")
+      self.oOudacom.servocmd(0x66f,0x253,0x1) # enable testm
+      self.oOudacom.Fn(1269,0x1342,0x0E00)        # set up test points CE6 = servom, e00 = NRZ0, 12B7=sync
+      self.oOudacom.Fn(1269,0x1343,0x12b7)                 # cc3=ReadM
+
+      self.oOudacom.Fn(1269,0x163E,0x0014)         # Enable ATOP/ATON CTF output, 0x1F=enable VIEWDAC
+      self.oOudacom.Fn(1269,0x1340,0x000E)         # VGAR on VIEWDAC
+      self.oOudacom.Fn(1269,0x0834,0x7040)         # Set TARG values 
+      self.oOudacom.Fn(1269,0x0835,0x0800)         # Set TARG values 
+      self.oOudacom.Fn(1269,0x0A08,0x4000)         # Set BDF_TARG values 
+      self.oOudacom.Fn(1269,0x0A09,0x0870)         # Set BDF_TARG values 
+      self.oOudacom.Fn(1269,0x0A0D,0x0060)         # Set BDF_TARG_TWUG values 
+      self.oOudacom.Fn(1269,0x166E,0x0081)         # Make sure WP_TRIM is set
+      self.oOudacom.Fn(1269,0x080A,0x0050)         # ACCR = 0x50
+      self.oOudacom.Fn(1269,0x1224,0x81F9)         # RD_LEN_ACC1=0,RD_LEN_ACC2=6,RD_LEN_ACC3=1,RD_DC_REC=0,GAPREC_IDL=0,GAPR_PEDGE=0
+      self.oOudacom.Fn(1269,0x129F,0x0000)         # SV_DC_REC, SV_LEN_ACC1, SV_LEN_ACC2, SV_LEN_ACC3
+  #***************  tune ************************
+      self.oOudacom.Fn(1269,0x122C,0x0000)         # DCTAPR=0x
+      self.oOudacom.Fn(1269,0x0833,0x0100)          # VGARSH = 0x100 centered
+      self.oOudacom.Fn(1269,0x080B,0x0400)          # ATT2R [13:12], ATTC_RD [10:8], ACCR_PERP = 0
+      self.oOudacom.Fn(1269,0x160F,0x0006)            # CTFHGR=2
+  #***************  tune ************************
+      self.oOudacom.servocmd(0x66f,0x00C8,0x0000)         # FREQ_OFF=0
+      self.oOudacom.servocmd(0x66f,0x0164,0x0000)         # FSYNG=0
+      self.oOudacom.servocmd(0x66f,0x018E,0x0000)          # SWFREQ=0
+      self.oOudacom.servocmd(0x66f,0x00AD,0x0001)           # CTFAUTO=1
+      self.oOudacom.Fn(1269,0x1214,0x0000)                  # SHADOWR=0; 0x0040 = 0
+      self.oOudacom.Fn(1269,0x1210,0x5000)         # GUGR=0GUGACQR=5 (5200;GUGACQR=5,GUGR=2)
+      self.oOudacom.Fn(1269,0x1233,0x0008)         # READSTRT=8
+      self.oOudacom.Fn(1269,0x1211,0x0000)         # GUGPACQ = 0 , AGRR=0
+      self.oOudacom.Fn(1269,0x1235,0x0051)         # DCSTRT=0, DCUGR=2, SCUGACR=2, DCUGACR=2
+      self.oOudacom.servocmd(0x66f,0x014E,0x0000) #DCSTRTS=0
+      self.oOudacom.servocmd(0x66f,0x0158,0x0000) #DCUGS=0
+      self.oOudacom.servocmd(0x66f,0x0159,0x0000) #DCUGACS=0,DCUGAVGS=0
+      self.oOudacom.Fn(1269,0x129c,0x0000)         # ZGS_ENR=0 (disable)
+      self.oOudacom.Fn(1269,0x0804,0x0F5C)          # MDIVR = 0x0f5c=479.98 MHz
+      self.oOudacom.servocmd(0x66f,0x00BC,0x0F5C) # MDIVS=0x0F5C
+      self.oOudacom.Fn(1269,0x0808,0x03C0)         # CTFFR = 0x3c0
+      self.oOudacom.servocmd(0x66f,0x00AA,0x03C0) # CTFFS=CTFFR
+      self.oOudacom.Fn(1269,0x0809,0x0114)          # ZFR=0x14
+      self.oOudacom.Fn(1269,0x1010,0x0003)         # ADG_MODE=3
+      self.oOudacom.Fn(1269,0x1012,0x6969)         # ADG_DATA
+      self.oOudacom.Fn(1269,0x1013,0x6969)         # ADG_DATA_HI 
+      self.oOudacom.Fn(1269,0x10C0,0x3F06)         # BIM_MODE = 0x1
+      self.oOudacom.Fn(1269,0x1020,0x0011)         # LLI_GATE_MD=1 IG1_Q_BYP=1
+      self.oOudacom.Fn(1269,0x11F6,0x0002)         # ASYNC_GATES=1
+      self.oOudacom.Fn(1269,0x0836,0x0032)          # PREA_SIZE = 32
+      self.oOudacom.Fn(1269,0x102E,0x019A)         # DATA_SIZE = 0x019A
+      self.oOudacom.Fn(1269,0x1005,0x019A)         # Sectors = 0x019A
+      self.oOudacom.Fn(1269,0x1230,0x0000)         # TWUG=0x0 NYUGR=0 NLUGR = 0
+      self.oOudacom.Fn(1269,0x0A0C,0x0000)         # BDF_TWUG = 0
+
+      self.LoadNPML()
+      self.LoadBackEndNPML()
+      self.LoadLoopFIR()
+      self.LoadBackEndFIR()
+
+      self.oOudacom.Fn(1269,0x0A44,0x5400)          # ENNPCAL = 0 NPCAL2MODE = 0
+      self.oOudacom.Fn(1269,0x0A46,0x0703)          # BBENP_BIASGUG=3 BENP_TAPCOGUG = 3 BENP_TAPCGUG = 2
+      self.oOudacom.Fn(1269,0x120A,0xC000)          # SIG_POL = 0
+      self.oOudacom.Fn(1269,0x161C,0x0000)          # WRITEINV = 0
+      self.oOudacom.Fn(1269,0x0A22,0x0000)          # SMWINDOW = 0
+      self.oOudacom.Fn(1269,0x0815,0x40C8)          # BCWIN = 4 SMTHRSH = C8
+      self.oOudacom.Fn(1269,0x1002,0x0008)          # WRTCKINT = 1
+      self.oOudacom.Fn(1269,0x121E,0x0079)          # ACQLENR = 7 ZPSLENR = 2
+
+      self.oOudacom.Fn(1269,0x10C7,0x0000)         # BIM_STRT=0
+      self.oOudacom.Fn(1269,0x10C6,0x0000)         # BIM_STOP
+      self.oOudacom.Fn(1269,0x1616,0x0000)         # PDBOWR=0 PD_WPC=0
+      self.oOudacom.Fn(1269,0x161F,0x7000)         # DRVTXOE=1
+      self.oOudacom.Fn(1269,0x1004,0x0004)         # RWBI=1,ENPARITY=1
+      self.oOudacom.Fn(1269,0x160B,0x0000)         # WP_DIS=0
+
+      self.oOudacom.Fn(1269,0x0800,0x3000)          # LATE0F=48, LATE1F=48
+      self.oOudacom.Fn(1269,0x0803,0x3020)          # LATE2R=2, NOMR=48
+      self.oOudacom.Fn(1269,0x0801,0x3020)          # LATE2F=3f - NOMF=30
+      self.oOudacom.Fn(1269,0x0802,0x3000)          # LATE1R=40, LATE0R=48
+      self.oOudacom.Fn(1269,0x0A12,0x4000)            # P5_INTERATION=1
+
+      self.oOudacom.servocmd(0x66f,0x0160,0x0000)     # SRVSQLCH=15,SRVDC_LONG=0
+      self.oOudacom.Fn(1269,0x1014,0xFFFF)            # ADG_SEED lsb = 0xFFFF
+      self.oOudacom.Fn(1269,0x121D,0x0C49)            # FUGR=1,FUGPAR=1,FUGACQR=1,ZOS_ENR=0,ZOSGADJR=0
+      self.oOudacom.Fn(1269,0x121C,0x30DB)            # PHUGR=3,PHUGPAR=3,PHUGACQR=3
+      self.oOudacom.servocmd(0x66f,0x07EA,0x0040)     # VREG = 4
+
+      self.oOudacom.Fn(1216,0x08F0,0x4000,16,1,0x07B6) # disable SGATE from TYCO
+
+      self.oOudacom.Fn(1269,0x100A,0x0004)          # LOOPBACK=1
+      self.oOudacom.Fn(1269,0x0880,0x0005)          # Set NRZCLR=1 and CHAN_FAULT=1 (clear faults)
+      self.oOudacom.Fn(1269,0x1033,0x0008)          # LAST_SPLT = 1

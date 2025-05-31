@@ -1,0 +1,197 @@
+00,START/STOP SPINDLE          ,0001,FATAL_ER_ERC: Fatal Error.
+01,READ/WRITE SERVO MEMORY     ,0002,SEEK_TRIES_FAIL_ERC: Fatal Error too many SEEK_TRIES.
+02,PROGRAM DOWNLOAD            ,0003,RE_SYNCS_FAIL_ERC: Fatal Error: Failed seek recovery: too many resync attempts.
+03,CALIBRATE DRIVE             ,0004,RE_LOADS_FAIL_ERC: Fatal Error: Load Heads Failed: too many RE_LOADS.
+04,UNDEFINED COMMAND           ,0005,RE_STARTS_FAIL_ERC: Fatal Error: Motor Start Failed: too many RE_STARTS.
+05,SEEK LOGICAL WRITE HEADER   ,0006,OL_RETRY_FAIL_ERC: Fatal Error: Failed to open latch after retries.
+06,RECEIVE FIXED OFFSET        ,000F,SERVO_FAULT_ERC: Servo Fault: Track Following Failure.
+07,UNDEFINED COMMAND           ,0014,SEEK_RETRY_ERC: Doing Re-Try Seek.
+08,UNDEFINED COMMAND           ,0015,LOCKED_ROTOR_ERC: No motor rotation sensed after initial ramp-up.
+09,JIT ACOUSTIC WRITE HEADER   ,0016,OL_RETRY_ERC: Failed to open latch - starting a retry.
+0A,JIT LOW PWR WRITE HEADER    ,0020,CMD_RCR5_ERC: Servo symbol address out of range.
+0B,JIT HIGH PWR WRITE HEADER   ,0021,CMD_RCR7_ERC: Head Number out of range.
+0C,UNDEFINED COMMAND           ,0022,CMD_RCR_POINTER_ERC: R_C_RAM command exceeded length of R_C_TAB.
+0D,UNDEFINED COMMAND           ,0023,RC2_FAIL_ERC: pointer initialization error detected by R_C_2.
+0E,TERMINATE COMMAND           ,0024,RC4_FAIL_ERC: pointer initialization error detected by R_C_4.
+0F,COAST                       ,0025,RCD_FAIL_ERC: pointer initialization error detected by R_C_D.
+15,SEEK LOGICAL READ           ,0026,RCE_FAIL_ERC: pointer initialization error detected by R_C_E.
+18,SEEK PHYSICAL READ          ,0027,RCF_FAIL_ERC: pointer initialization error detected by R_C_F.
+1F,GRAY CODE BUCKETS           ,0028,RCD_ADDRS_FAIL_ERC: pointer address error detected by R_C_D.
+25,SEEK LOGICAL WRITE          ,0029,RCE_ADDRS_FAIL_ERC: pointer address error detected by R_C_E.
+2F,TEMPERATURE MEASURE         ,002A,RCF_ADDRS_FAIL_ERC: pointer address error detected by R_C_F.
+3F,VOLTAGE MEASURE             ,002B,RC2_ADDRS_FAIL_ERC: pointer address error detected by R_C_2.
+4F,DATA AMPLITUDE MEASURE      ,002C,Preamp Readback Failed
+5F,CAL TF MEASUREMENT          ,0060,State Space Seek Retry
+6F,READ/WRITE PREAMP REGISTER  ,0061,State Space Normal Seek Retry
+7F,SEEK AND CAL TF             ,0062,State Space Seek Retry in PID Mode
+8F,CHARACTERIZE FLAW           ,0063,None
+9F,FAST IO CONTROL             ,0064,State Space Seek Failed PID
+AF,CRS ALL HEADS               ,0065,None
+BF,BODE PLOT                   ,0066,None
+CF,MR BIAS CHOP                ,0067,None
+DF,AGC ALL HEADS               ,0070,Servo Head Polarity Event during Recovery.
+EF,INITIALIZE FIFO             ,0080,BAD_SAMP_TRACK_ERC: Too many bad samples detected during TRACK_DATA ISR.
+FF,RRO MEASUREMENT (ZAP)       ,0081,NO_TMD_TRACK_ERC: Track Follow/Misc:  Too many TMD errors.
+10,UNDEFINED COMMAND           ,0082,EM_SPEED_TRACK_ERC: Track Follow/Misc: Lost Sync - Embedded motor speed error.
+11,UNDEFINED COMMAND           ,0083,MOVE_TIME_TRACK_ERC: Timeout During Seek Settle.
+12,UNDEFINED COMMAND           ,0084,BAD_SAMP_VEL_ERC: Too many bad samples detected during VCON_DATA ISR.
+13,UNDEFINED COMMAND           ,0085,NO_TMD_VEL_ERC: Velocity Control: Too many TMD errors.
+14,UNDEFINED COMMAND           ,0086,EM_SPEED_VEL_ERC:: Velocity Control: Lost Sync - Embedded motor speed error.
+16,UNDEFINED COMMAND           ,0087,MOVE_TIME_VEL_ERC: Timeout During Velocity Control.
+17,UNDEFINED COMMAND           ,0088,DMS_FAIL_ERC: Failed to get demod sync on current head.
+19,JIT ACOUSTIC LOGICAL READ   ,0089,SYNC_ANY_FAIL_ERC: Failed to get demod sync during SYNC_ANY_HEAD.
+1A,JIT LOW PWR LOGICAL READ    ,008A,CALTF_FAIL_ERC: Excessive PE detected during calibration track follow.
+1B,JIT HIGH PWR LOGICAL READ   ,008B,CHAR_ER1_ERC: Characterize Command received when not on track.
+1C,UNDEFINED COMMAND           ,008C,SM_SPEED_ER_ERC: Excessive spindle speed error during Sensor Mode motor control.
+1D,UNDEFINED COMMAND           ,008D,SPEED_FAIL_ERC: Stopping motor due to excessive speed error or other motor error checks.
+1E,UNDEFINED COMMAND           ,008E,TERMINATED_ERC: Command Terminated ( Que Empty ).
+20,UNDEFINED COMMAND           ,008F,TERMINATED_IN_QUE_ERC: Command Queued at Terminate.
+21,UNDEFINED COMMAND           ,0090,Head Number Out of Range in R_C_7
+22,UNDEFINED COMMAND           ,0091,SEEK_LOST_SYNC_ERC: Lost embedded sync detected at start of seek.
+23,UNDEFINED COMMAND           ,0094,BAD_SAMP_PUNT_ERC: Bad Samples during Velocity Punt Seek
+24,UNDEFINED COMMAND           ,009B,CJM_ER1_ERC: Coarse Jog Measure Command received when not on track.
+26,UNDEFINED COMMAND           ,009D,OL_RETRY_ERC: Failed to open latch: starting a retry.
+27,UNDEFINED COMMAND           ,00A1,NO_TMD_HS_ERC: Too many TMD errors detected at head switch.
+28,UNDEFINED COMMAND           ,00AB,CJM_ER2_ERC: Excessive PE detected during Coarse Jog Measure Command.
+29,JIT ACOUSTIC LOGICAL WRITE  ,00AC,SM_MOTOR_TRANS_DELAY_RETRY_ERC: Motor Transient Delay Retry
+2A,JIT LOW PWR LOGICAL WRITE   ,00AD,INDEX_ERROR_ERC: Index Error Detected.
+2B,JIT HIGH PWR LOGICAL WRITE  ,00BB,CHAR_TIMEOUT_ERC: Characterize Flaw timed out with unsafe too long.
+2C,UNDEFINED COMMAND           ,00BC,SM_MOTOR_TRANS_DELAY_FAIL_ERC: Motor Transient Delay Process Failed
+2D,UNDEFINED COMMAND           ,00BD,Misc - VERIFY_PREAMP_ERC: Preamp check failed at MOT_2_VP.
+2E,UNDEFINED COMMAND           ,00CD,Misc - VERIFY_HEAD_NUMBER_ERC: Head # check failed at MOT_3_CHECK_HEAD.
+30,UNDEFINED COMMAND           ,00DD,Misc - VERIFY_HEAD_ON_ERC: Preamp On check failed at MOT_3_CHECK_HEAD.
+31,UNDEFINED COMMAND           ,0000,None
+32,UNDEFINED COMMAND           ,4000,On Track Following
+33,UNDEFINED COMMAND           ,4002,Calibration OK
+34,UNDEFINED COMMAND           ,4011,Minimum Brake Delay
+35,UNDEFINED COMMAND           ,4012,Coast to Landing Speed
+36,UNDEFINED COMMAND           ,4013,Brake Delay in progress
+37,UNDEFINED COMMAND           ,4014,Motor Stopped
+38,UNDEFINED COMMAND           ,4015,No Sequence in Progress - Twiddle
+39,UNDEFINED COMMAND           ,4016,Logic Initiated
+3A,UNDEFINED COMMAND           ,4017,Undefined Command
+3B,UNDEFINED COMMAND           ,4018,Open Latch Motor Not Up to Speed
+3C,UNDEFINED COMMAND           ,401F,Unlatch Sequence Completed
+40,UNDEFINED COMMAND           ,4020,Motor Start Completed OK
+41,UNDEFINED COMMAND           ,4021,VCO Preset and Ramp
+42,UNDEFINED COMMAND           ,4022,Clock Calibration Failed
+43,UNDEFINED COMMAND           ,4023,Start of Spindle Closed Loop PLL Acceleration
+44,UNDEFINED COMMAND           ,4024,Initial VCO to Tach Check
+45,UNDEFINED COMMAND           ,4025,Flying Speed Check
+46,UNDEFINED COMMAND           ,4026,Up to Speed Check
+47,UNDEFINED COMMAND           ,4027,RPA Current Sense 1 Failed
+48,UNDEFINED COMMAND           ,4028,RPA Current Sense 2 Failed
+49,UNDEFINED COMMAND           ,4029,RPA Ramp Up Failed
+4A,UNDEFINED COMMAND           ,402A,Open Loop Ramp Up Failed
+4B,UNDEFINED COMMAND           ,402B,VCO Handoff Failed
+4C,UNDEFINED COMMAND           ,402C,VCO Minimum RPM Check Failed
+4D,UNDEFINED COMMAND           ,402D,Current Limiter Failed
+4E,UNDEFINED COMMAND           ,402E,RPL Time Failed
+50,UNDEFINED COMMAND           ,402F,RPL Decision Failed
+51,UNDEFINED COMMAND           ,4030,Reset Demod Sync Routine
+52,UNDEFINED COMMAND           ,4031,Demod Sync in Progress
+53,UNDEFINED COMMAND           ,4032,First SGate Interrupt Timeout
+54,UNDEFINED COMMAND           ,4033,Second SGate Interrupt Timeout
+55,UNDEFINED COMMAND           ,4034,Failed Timing Mark Detect Looking for Index Sector
+56,UNDEFINED COMMAND           ,4035,Failed for Excessive Timing Error Looking for Index Sector
+57,UNDEFINED COMMAND           ,4036,Timeout Looking for Index Sector
+58,UNDEFINED COMMAND           ,4037,Failed Timing Mark Detect Looking for 10 Good Sectors after Index
+59,UNDEFINED COMMAND           ,4038,Failed Excessing Timing Error Looking for 10 Good Sectors after Index
+5A,UNDEFINED COMMAND           ,4039,Timeout Looking for 'x' Good Sectors after Index
+5B,UNDEFINED COMMAND           ,403A,Failed Excessive Timing during Sync Settle
+5C,UNDEFINED COMMAND           ,403B,Failed Timing Mark Detect during Sync Settle
+5D,UNDEFINED COMMAND           ,403C,Excessive Speed Error after Demod Sync
+5E,UNDEFINED COMMAND           ,403D,Excessive Bad Timing Marks after Demod Sync
+60,UNDEFINED COMMAND           ,403E,Preamp Head Readback Verification Failed
+61,UNDEFINED COMMAND           ,403F,Completed Demod Sync Correctly
+62,UNDEFINED COMMAND           ,4040,Start of Seek Routine
+62,UNDEFINED COMMAND           ,4041,Normal Seek in Progress
+62,UNDEFINED COMMAND           ,4042,Slow or Low Velocity Seek
+62,UNDEFINED COMMAND           ,4043,Capture Track Routine
+63,UNDEFINED COMMAND           ,6044,Requested Seek is Beyond Max Track
+64,UNDEFINED COMMAND           ,6045,Requested Seek is Beyond Max Head
+65,UNDEFINED COMMAND           ,4046,Model Reference Seek in Progress
+66,UNDEFINED COMMAND           ,4047,Punt Seek in Progress
+67,UNDEFINED COMMAND           ,5049,Seek Motor Speed
+68,UNDEFINED COMMAND           ,6049,Seek Motor Speed
+69,UNDEFINED COMMAND           ,604A,Forced Seek Failure
+6A,UNDEFINED COMMAND           ,4050,Speed Stablization
+6A,UNDEFINED COMMAND           ,4051,Speed Stablization Failed
+6B,UNDEFINED COMMAND           ,4052,VCO Tach Check Failed
+6C,UNDEFINED COMMAND           ,4053,Fatal Speed Fault
+6D,UNDEFINED COMMAND           ,4061,Characterize Flaw Routine
+6E,UNDEFINED COMMAND           ,407F,Open Latch Sequence Failed
+70,UNDEFINED COMMAND           ,4088,Power On AGC Calibration / Track Follow
+71,UNDEFINED COMMAND           ,4089,Power On DC Calibration / Track Follow
+72,UNDEFINED COMMAND           ,408A,Power On Force Constant Calibration
+73,UNDEFINED COMMAND           ,408B,Power On ACFF Calibration
+74,UNDEFINED COMMAND           ,408C,Track Follow Calibration
+75,UNDEFINED COMMAND           ,408D,Power On Calibration Bias Hysteresis / Track Follow
+76,UNDEFINED COMMAND           ,408E,Power On Calibration Head Switch Calibration
+77,UNDEFINED COMMAND           ,4090,Head Flip: Reset Demod Sync Routine
+78,UNDEFINED COMMAND           ,4091,Head Flip: Demod Sync in Progress
+79,UNDEFINED COMMAND           ,4092,Head Flip: First SGate Interrupt Timeout
+7A,UNDEFINED COMMAND           ,4093,Head Flip: Second SGate Interrupt Timeout
+7B,UNDEFINED COMMAND           ,4094,Head Flip: Failed Timing Mark Detect Looking for Index Sector
+7B,UNDEFINED COMMAND           ,4095,Head Flip: Failed for Excessive Timing Error Looking for Index Sector
+7B,UNDEFINED COMMAND           ,4096,Head Flip: Timeout Looking for Index Sector
+7C,UNDEFINED COMMAND           ,4097,Head Flip: Failed Timing Mark Detect Looking for 10 Good Sectors after Index
+7D,UNDEFINED COMMAND           ,4098,Head Flip: Failed Excessing Timing Error Looking for 10 Good Sectors after Index
+7E,UNDEFINED COMMAND           ,4099,Head Flip: Timeout Looking for 'x' Good Sectors after Index
+80,UNDEFINED COMMAND           ,409A,Head Flip: Failed Excessive Timing during Sync Settle
+81,UNDEFINED COMMAND           ,409B,Head Flip: Failed Timing Mark Detect during Sync Settle
+82,UNDEFINED COMMAND           ,409C,Head Flip: Excessive Speed Error after Demod Sync
+83,UNDEFINED COMMAND           ,409D,Head Flip: Excessive Bad Timing Marks after Demod Sync
+84,UNDEFINED COMMAND           ,409E,Head Flip: Preamp Head Readback Verification Failed
+85,UNDEFINED COMMAND           ,409F,Head Flip: Completed Demod Sync Correctly
+86,UNDEFINED COMMAND           ,40F7,Preamp Revision Code doesn't Match Supported Preamps
+87,UNDEFINED COMMAND           ,5000,Off Track Error Code - Last Sector Error was NO_TMD
+88,UNDEFINED COMMAND           ,5001,Off Track Error Code - Last Sector Error was TMD Time Error
+89,UNDEFINED COMMAND           ,5002,Off Track Error Code - Last Sector Error was Observer Sector Error
+8A,UNDEFINED COMMAND           ,5003,Off Track Error Code - Last Sector Error was Track ID Error
+8B,UNDEFINED COMMAND           ,0000,None
+8C,UNDEFINED COMMAND           ,BF00,Boot Flash checksum error code
+8D,UNDEFINED COMMAND           ,BF01,Servo Flash checksum error code
+8E,UNDEFINED COMMAND           ,BF02,Expecting download command (header word 1) error code
+90,UNDEFINED COMMAND           ,BF03,Expecting download command (header word 2) error code
+91,UNDEFINED COMMAND           ,BF04,Wrong HW/STPM record type header error code.
+92,UNDEFINED COMMAND           ,BF05,Expecting download command (header word 3) error code
+93,UNDEFINED COMMAND           ,BF06,Expecting download command (header word 4) error code
+94,UNDEFINED COMMAND           ,BF07,Expecting download command (STPM data) error code
+95,UNDEFINED COMMAND           ,BF08,STPM download checksum error code
+96,UNDEFINED COMMAND           ,BF09,Illegal software trap taken error code
+97,UNDEFINED COMMAND           ,BF10,Download: Bad hardware type field code
+98,UNDEFINED COMMAND           ,BF11,Download: Bad record type field code
+99,UNDEFINED COMMAND           ,BF12,Segment map: Start address not found error code
+9A,UNDEFINED COMMAND           ,BF13,Segment map: Illegal download length error code
+9B,UNDEFINED COMMAND           ,BF80,Download: Bad check sum error code
+9C,UNDEFINED COMMAND           ,BF81,Clear: Clearing operation retries exhausted error code
+9D,UNDEFINED COMMAND           ,BF82,Erase: Erase try count exceeded error code
+9E,UNDEFINED COMMAND           ,BF83,I Erase: Inverse erase retries exhausted error code
+A0,UNDEFINED COMMAND           ,BF84,Programming: Exceeded programming attempts error code
+A1,UNDEFINED COMMAND           ,BF85,Boost: Boost operation retries exceeded error code
+A2,UNDEFINED COMMAND           ,BF86,Download: Unexpected end of download error code
+A3,UNDEFINED COMMAND           ,BF87,Download: Not a download command error code
+A4,UNDEFINED COMMAND           ,BF88,Erase: Erase timed out error code
+A5,UNDEFINED COMMAND           ,BF89,Flash Write: Flash write timed out error code
+A6,UNDEFINED COMMAND           ,BF8A,Write: Write timed out error code
+A7,UNDEFINED COMMAND           ,BF8B,Download transfer word count miscompare error code
+A8,UNDEFINED COMMAND           ,BF8C,Boost: Boosting entire array retries exceeded error code
+A9,UNDEFINED COMMAND           ,BF90,SCSI Can't Reset Calico
+AA,UNDEFINED COMMAND           ,BF98,Flash Margin Test - Slow Read/Inv. Address
+AB,UNDEFINED COMMAND           ,BF99,Flash Margin Test - Fast Read
+AC,UNDEFINED COMMAND           ,F001,Misc - Firmware Reset Event
+AD,UNDEFINED COMMAND           ,F002,Misc - Discontinuity Event - Too Many Codes
+AE,UNDEFINED COMMAND           ,F003,Misc - Executing Command from Que
+AF,UNDEFINED COMMAND           ,F004,Misc - FIFO cleared at INIT_FIFO subroutine.
+AF,UNDEFINED COMMAND           ,F010,Misc - Terminate Command at CAPT6
+AF,UNDEFINED COMMAND           ,F011,Misc - Terminate Command at R_CAPT6
+AF,UNDEFINED COMMAND           ,F012,Misc - Terminate Command at CMD_SEEK
+AF,UNDEFINED COMMAND           ,F013,Misc - Terminate Command at IO_TF
+AF,UNDEFINED COMMAND           ,F014,Misc - Terminate Command at MREF_SEEK
+AF,UNDEFINED COMMAND           ,F031,Misc - Power Save Mode Enabled
+AF,UNDEFINED COMMAND           ,F802,Misc - Servo FIFO Version
+AF,UNDEFINED COMMAND           ,FEFE,Misc - Diag Reg Fatal Error Code.
+AF,UNDEFINED COMMAND           ,FFFF,Misc - FIFO_WRITE_PTR error encountered during READ_FIFO routine.
+AF,UNDEFINED COMMAND           ,0000,None
+B0,Bogus command for comment   ,0000,>>>>>>TMSCSE.PAG
